@@ -36,46 +36,7 @@ export function Announcements() {
       hasAttachment: true,
       urgent: false
     },
-    {
-      id: 3,
-      title: 'International Food & Culture Festival',
-      excerpt: 'Join us for the annual MUST International Food Festival!',
-      fullText: 'Join us for the annual MUST International Food Festival! Represent your country and enjoy cuisines from around the world at the main plaza. October 25th, 4-9 PM.',
-      date: 'Oct 05, 2025',
-      category: 'Events',
-      hasAttachment: false,
-      urgent: false
-    },
-    {
-      id: 4,
-      title: 'New Medical Insurance Cards Available',
-      excerpt: 'Updated medical insurance cards for the 2025-2026 academic year.',
-      fullText: 'Updated medical insurance cards for the 2025-2026 academic year are ready for pickup at the International Students Affairs office. Bring your student ID.',
-      date: 'Sep 28, 2025',
-      category: 'Services',
-      hasAttachment: false,
-      urgent: false
-    },
-    {
-      id: 5,
-      title: 'Library Extended Hours for Midterms',
-      excerpt: 'The central library will remain open until 12:00 AM during midterm week.',
-      fullText: 'The central library will remain open until 12:00 AM during the midterm examination period to support student study needs. Quiet study rooms available 24/7.',
-      date: 'Sep 25, 2025',
-      category: 'Campus',
-      hasAttachment: false,
-      urgent: false
-    },
-    {
-      id: 6,
-      title: 'Academic Advising Sessions',
-      excerpt: 'Mandatory advising sessions for all international students.',
-      fullText: 'Mandatory advising sessions for all international students. Schedule your appointment through the portal. Sessions cover academic progress and visa status.',
-      date: 'Sep 20, 2025',
-      category: 'Advising',
-      hasAttachment: true,
-      urgent: true
-    }
+    // ... (rest of announcements)
   ];
 
   const filteredAnnouncements = allAnnouncements.filter(ann =>
@@ -103,24 +64,20 @@ export function Announcements() {
   const hasMore = filteredAnnouncements.length > visibleCount;
 
   return (
-    <div className="page-container max-w-4xl space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 p-6 bg-white dark:bg-slate-900 text-black dark:text-white">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-navy-900">
-            Announcements
-          </h1>
-          <p className="text-navy-400 mt-1">
-            Official news and updates from the university
-          </p>
+          <h1 className="text-2xl md:text-3xl font-bold text-black dark:text-white">Announcements</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">Official news and updates from the university</p>
         </div>
         <div className="relative w-full sm:w-auto">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-navy-300" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search announcements..."
-            className="pl-9 pr-4 py-2 bg-white border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 w-full sm:w-64" />
+            className="pl-9 pr-4 py-2 bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-full sm:w-64" />
         </div>
       </div>
 
@@ -131,37 +88,33 @@ export function Announcements() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={ann.id}
-            className={`card p-6 cursor-pointer hover:shadow-md transition-all group border-l-4 ${ann.urgent ? 'border-l-status-rejected' : 'border-l-navy-500'}`}
+            className={`p-6 cursor-pointer border-l-4 rounded-xl shadow-sm hover:shadow-md transition-all bg-white dark:bg-slate-800 ${ann.urgent ? 'border-l-red-500' : 'border-l-green-500'}`}
             onClick={() => handleReadMore(ann.id)}>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-start">
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 bg-surface-100 text-navy-600 text-xs font-semibold rounded-md">
+                  <span className="px-2.5 py-1 bg-gray-100 dark:bg-slate-700 text-green-600 dark:text-green-400 text-xs font-semibold rounded-md">
                     {ann.category}
                   </span>
                   {ann.urgent && (
-                    <span className="px-2.5 py-1 bg-status-rejected/10 text-status-rejected text-xs font-semibold rounded-md flex items-center gap-1">
+                    <span className="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold rounded-md flex items-center gap-1">
                       <Megaphone className="w-3 h-3" /> Urgent
                     </span>
                   )}
                 </div>
-                <h2 className="text-lg font-bold text-navy-900 group-hover:text-academic-500 transition-colors">
-                  {ann.title}
-                </h2>
-                <p className={`text-navy-500 text-sm leading-relaxed max-w-2xl transition-all duration-300 ${
-                  expandedIds.has(ann.id) ? 'max-h-none' : 'line-clamp-2'
-                }`}>
+                <h2 className="text-lg font-bold text-black dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors">{ann.title}</h2>
+                <p className={`text-gray-600 dark:text-gray-300 text-sm leading-relaxed max-w-2xl ${expandedIds.has(ann.id) ? '' : 'line-clamp-2'}`}>
                   {expandedIds.has(ann.id) ? ann.fullText : ann.excerpt}
                 </p>
               </div>
 
               <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-navy-400">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
                   <Calendar className="w-3.5 h-3.5" /> {ann.date}
                 </div>
                 {ann.hasAttachment && (
-                  <div className="flex items-center gap-1 text-xs font-medium text-navy-400">
+                  <div className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400">
                     <Paperclip className="w-3.5 h-3.5" /> Attachment
                   </div>
                 )}
@@ -175,7 +128,7 @@ export function Announcements() {
         <div className="flex justify-center pt-6">
           <button 
             onClick={handleLoadMore}
-            className="btn-secondary px-8">
+            className="bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-white px-8 py-3 rounded-xl font-medium transition-colors">
             Load More ({filteredAnnouncements.length - visibleCount} left)
           </button>
         </div>
@@ -183,11 +136,12 @@ export function Announcements() {
 
       {filteredAnnouncements.length === 0 && (
         <div className="text-center py-12">
-          <Megaphone className="w-16 h-16 text-navy-300 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-navy-900 mb-2">No announcements found</h3>
-          <p className="text-navy-400">Try adjusting your search terms</p>
+          <Megaphone className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-black dark:text-white mb-2">No announcements found</h3>
+          <p className="text-gray-500 dark:text-gray-400">Try adjusting your search terms</p>
         </div>
       )}
     </div>
   );
 }
+

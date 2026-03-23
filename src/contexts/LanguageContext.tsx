@@ -12,10 +12,10 @@ const translations: Translations = {
     // Navbar
     home: 'Home',
     academics: 'Academics',
-    schedule: 'Schedule', 
-    services: 'Services',
+    questionnaires: 'Questionnaires',
+    resources: 'Resources',
     announcements: 'Announcements',
-    support: 'Support',
+    contactUs: 'Contact Us',
     
     // Common
     edit: 'Edit',
@@ -79,17 +79,17 @@ const translations: Translations = {
     history: 'History',
     whyMUST: 'Why MUST',
     values: 'Values & Principles',
-    contactUs: 'Contact Us',
+    contactUsFooter: 'Contact Us',
     privacyPolicy: 'Privacy & Policy'
   },
   ar: {
     // Add Arabic translations
     home: 'الرئيسية',
     academics: 'الكليات والبرامج',
-    schedule: 'جدول الحصص',
-    services: 'الخدمات',
+    questionnaires: 'الاستبيانات',
+    resources: 'الموارد',
     announcements: 'الإعلانات',
-    support: 'الدعم',
+    contactUs: 'اتصل بنا',
     
     edit: 'تعديل',
     save: 'حفظ',

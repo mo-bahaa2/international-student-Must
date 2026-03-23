@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Search,
   Bell,
@@ -13,7 +13,7 @@ import {
   Moon
 } from
   'lucide-react';
-import { PageType, Language } from '../App';
+import type { PageType, Language } from '../App';
 interface NavbarProps {
   currentPage: PageType;
   onNavigate: (page: PageType) => void;
@@ -48,28 +48,28 @@ export function Navbar({
     label: string;
   }[] = [
       {
-        id: 'dashboard',
+        id: 'dashboard' as const,
         label: 'Home'
       },
       {
-        id: 'academics',
+        id: 'academics' as const,
         label: 'Academics'
       },
       {
-        id: 'schedule',
-        label: 'Schedule'
+        id: 'questionnaires' as const,
+        label: 'Questionnaires'
       },
       {
-        id: 'services',
-        label: 'Services'
+        id: 'resources' as const,
+        label: 'Resources'
       },
       {
-        id: 'announcements',
+        id: 'announcements' as const,
         label: 'Announcements'
       },
       {
-        id: 'chat',
-        label: 'Support'
+        id: 'contact-us' as const,
+        label: 'Contact Us'
       }];
 
   const handleNavClick = (page: PageType) => {
@@ -78,7 +78,7 @@ export function Navbar({
   };
   return (
     <header
-      className={`sticky top-0 z-50 shadow-nav transition-colors duration-300 ${darkMode ? 'bg-dark-surface' : 'bg-navy-500'} text-white`}>
+      className={`sticky top-0 z-50 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-300 ${darkMode ? 'bg-gray-900 border-gray-800 text-gray-100 shadow-2xl' : 'bg-white text-gray-900'}`}>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
@@ -109,13 +109,8 @@ export function Navbar({
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`relative px-4 py-2 text-sm font-medium transition-all duration-200 ${currentPage === item.id ? 'text-[#00AC5C]' : 'text-navy-100 hover:text-white'}`}>
-
+className={`relative px-4 py-2 text-sm font-medium ${currentPage === item.id ? 'text-[#00AC5C] border-b-2 border-[#00AC5C]' : 'text-gray-700 dark:text-white'}`}>
                 {item.label}
-                {/* Active indicator bar */}
-                <span
-                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 bg-[#00AC5C] rounded-full transition-all duration-300 ${currentPage === item.id ? 'w-6' : 'w-0'}`} />
-
               </button>
             )}
           </nav>
@@ -125,7 +120,7 @@ export function Navbar({
             {/* Dark Mode Toggle */}
             <button
               onClick={onToggleDarkMode}
-              className="p-2 text-navy-100 hover:text-[#00AC5C] rounded-full transition-colors duration-200"
+              className="p-2 text-navy-100 rounded-full"
               title={darkMode ? 'Light Mode' : 'Dark Mode'}>
 
               {darkMode ?
@@ -177,7 +172,7 @@ export function Navbar({
               }
             </div>
 
-            <button className="p-2 text-navy-100 hover:text-[#00AC5C] rounded-full transition-colors duration-200">
+          <button className="p-2 text-navy-100 rounded-full">
               <Search className="w-5 h-5" />
             </button>
 
@@ -280,8 +275,7 @@ export function Navbar({
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`block w-full text-left px-3 py-3 rounded-md text-base font-medium transition-colors duration-200 ${currentPage === item.id ? 'text-[#00AC5C] bg-white/5' : 'text-navy-100 hover:text-white hover:bg-white/5'}`}>
-
+                className={`block w-full text-left px-3 py-3 rounded-md text-base font-medium transition-colors duration-200 ${currentPage === item.id ? 'text-[#00AC5C] bg-green-50 font-semibold border-l-4 border-[#00AC5C] pl-5' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'}`}>
                 {item.label}
               </button>
             )}
@@ -299,17 +293,17 @@ export function Navbar({
               </button>
             </div>
             <div className="flex items-center gap-3 px-3 py-3">
-              <Globe className="w-5 h-5 text-navy-100" />
+              <Globe className="w-5 h-5 text-gray-600" />
               <button
                 onClick={() => onToggleLanguage('en')}
-                className={`text-base font-medium transition-colors duration-200 ${language === 'en' ? 'text-[#00AC5C]' : 'text-navy-100'}`}>
+                className={`text-base font-medium transition-colors duration-200 ${language === 'en' ? 'text-[#00AC5C] font-semibold' : 'text-gray-700 hover:text-gray-900'}`}>
 
                 EN
               </button>
-              <span className="text-navy-400">|</span>
+              <span className="text-gray-400">|</span>
               <button
                 onClick={() => onToggleLanguage('ar')}
-                className={`text-base font-medium transition-colors duration-200 ${language === 'ar' ? 'text-[#00AC5C]' : 'text-navy-100'}`}>
+                className={`text-base font-medium transition-colors duration-200 ${language === 'ar' ? 'text-[#00AC5C] font-semibold' : 'text-gray-700 hover:text-gray-900'}`}>
 
                 AR
               </button>

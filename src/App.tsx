@@ -5,31 +5,22 @@ import { Footer } from './components/Footer';
 // Pages
 import { Dashboard } from './pages/Dashboard';
 import { Academics } from './pages/Academics';
-import { Schedule } from './pages/Schedule';
-import { SubmitRequest } from './pages/SubmitRequest';
-import { MyRequests } from './pages/MyRequests';
+import Questionnaires from './pages/Questionnaires';
+import Resources from './pages/Resources';
 import { Announcements } from './pages/Announcements';
 import { Notifications } from './pages/Notifications';
-import { StudentServices } from './pages/StudentServices';
-import { Chat } from './pages/Chat';
+import { ContactUs } from './pages/ContactUs';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
+import { SubmitRequest } from './pages/SubmitRequest';
+import { MyRequests } from './pages/MyRequests';
 import { ProfileProvider } from './contexts/ProfileContext';
 import { RequestsProvider } from './contexts/RequestsContext';
 import { LanguageProvider, Language, useLanguage } from './contexts/LanguageContext';
 
-export type PageType =
-| 'dashboard'
-| 'academics'
-| 'schedule'
-| 'submit-request'
-| 'my-requests'
-| 'announcements'
-| 'notifications'
-| 'services'
-| 'chat'
-| 'profile'
-| 'settings';
+export type PageType = 'dashboard' | 'academics' | 'questionnaires' | 'resources' | 'announcements' | 'notifications' | 'contact-us' | 'profile' | 'settings' | 'submit-request' | 'my-requests';
+
+export type { Language } from './contexts/LanguageContext';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
@@ -52,7 +43,6 @@ function AppContent() {
     document.documentElement.classList.toggle('dark', newDarkMode);
   };
 
-  // Load dark mode from localStorage
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
     if (savedDarkMode !== darkMode) {
@@ -67,32 +57,31 @@ function AppContent() {
         return <Dashboard onNavigate={handleNavigate} darkMode={darkMode} />;
       case 'academics':
         return <Academics />;
-      case 'schedule':
-        return <Schedule />;
-      case 'submit-request':
-        return <SubmitRequest onNavigate={handleNavigate} />;
-      case 'my-requests':
-        return <MyRequests />;
+      case 'questionnaires':
+        return <Questionnaires darkMode={darkMode} />;
+      case 'resources':
+        return <Resources onNavigate={handleNavigate} />;
       case 'announcements':
         return <Announcements />;
       case 'notifications':
         return <Notifications />;
-      case 'services':
-        return <StudentServices onNavigate={handleNavigate} />;
-
-      case 'chat':
-        return <Chat />;
+      case 'contact-us':
+        return <ContactUs />;
       case 'profile':
         return <Profile />;
       case 'settings':
         return <Settings />;
+      case 'submit-request':
+        return <SubmitRequest onNavigate={handleNavigate} />;
+      case 'my-requests':
+        return <MyRequests />;
       default:
         return <Dashboard onNavigate={handleNavigate} darkMode={darkMode} />;
     }
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? 'bg-dark-bg' : 'bg-surface-100'}`}>
+    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? 'dark bg-comfortDark-bg text-comfortDark-text' : 'bg-white text-gray-900'}`}>
       <Navbar
         currentPage={currentPage}
         onNavigate={handleNavigate}
@@ -101,7 +90,7 @@ function AppContent() {
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
       />
-      <main className="flex-grow flex flex-col relative w-full overflow-hidden">
+      <main className="flex-1">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
@@ -109,7 +98,7 @@ function AppContent() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="flex-grow flex flex-col w-full">
+            className="min-h-[calc(100vh-140px)]">
             {renderPage()}
           </motion.div>
         </AnimatePresence>
@@ -130,3 +119,4 @@ export function App() {
     </LanguageProvider>
   );
 }
+

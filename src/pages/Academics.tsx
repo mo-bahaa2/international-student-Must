@@ -1,288 +1,128 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Award, Clock, CheckCircle2 } from 'lucide-react';
+import { FileText, Download, GraduationCap, Calendar, ExternalLink } from 'lucide-react';
+
 export function Academics() {
-  const courses = [
-  {
-    code: 'CS301',
-    name: 'Software Engineering',
-    instructor: 'Dr. Ahmed Youssef',
-    schedule: 'Sun, Tue 09:00 AM',
-    credits: 3
-  },
-  {
-    code: 'CS305',
-    name: 'Database Systems',
-    instructor: 'Dr. Mona Ali',
-    schedule: 'Sun, Tue 11:30 AM',
-    credits: 3
-  },
-  {
-    code: 'IT202',
-    name: 'Web Development',
-    instructor: 'Eng. Karim Hassan',
-    schedule: 'Mon, Wed 02:00 PM',
-    credits: 3
-  },
-  {
-    code: 'MATH205',
-    name: 'Linear Algebra',
-    instructor: 'Dr. Samy Ibrahim',
-    schedule: 'Mon, Wed 10:00 AM',
-    credits: 3
-  },
-  {
-    code: 'ENG102',
-    name: 'Technical Writing',
-    instructor: 'Dr. Rania Mahmoud',
-    schedule: 'Thu 09:00 AM',
-    credits: 2
-  },
-  {
-    code: 'HUM101',
-    name: 'Egyptian History',
-    instructor: 'Dr. Tarek Sayed',
-    schedule: 'Thu 12:00 PM',
-    credits: 2
-  }];
+  const documents = [
+    { name: 'Fall 2025 Semester Timetable', type: 'Timetable', size: '1.2 MB', date: 'Sep 01, 2025' },
+    { name: 'Spring 2025 Semester Timetable', type: 'Timetable', size: '1.1 MB', date: 'Jan 15, 2025' },
+    { name: 'Academic Calendar 2025-2026', type: 'Calendar', size: '850 KB', date: 'Aug 20, 2025' },
+    { name: 'Course Registration Guide', type: 'Guide', size: '2.4 MB', date: 'Aug 15, 2025' },
+    { name: 'Exam Regulations & Policies', type: 'Policy', size: '1.8 MB', date: 'Jul 10, 2025' },
+    { name: 'Grading System Overview', type: 'Guide', size: '620 KB', date: 'Jul 05, 2025' },
+  ];
+
+  const majors = [
+    { title: 'Computer and Information Major', faculty: 'Faculty of Information Technology', credits: 140, years: 4 },
+    { title: 'Information Technology Major', faculty: 'Faculty of Information Technology', credits: 140, years: 4 },
+    { title: 'Artificial Intelligence Major', faculty: 'Faculty of Information Technology', credits: 140, years: 4 },
+  ];
 
   return (
-    <div className="page-container space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-12 bg-white dark:bg-slate-900 text-black dark:text-white min-h-screen">
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-gray-200 dark:border-slate-700">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-navy-900">
-            Academic Information
-          </h1>
-          <p className="text-navy-400 mt-1">
-            View your current standing and registered courses
-          </p>
+          <h1 className="text-3xl font-bold text-black dark:text-white">Academics</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">Download academic documents, timetables, and explore major tracks</p>
         </div>
-        <div className="bg-academic-50 text-academic-600 px-4 py-2 rounded-lg font-semibold border border-academic-100 flex items-center gap-2">
-          <Clock className="w-4 h-4" /> Fall 2025 Semester
+        <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 px-4 py-2 rounded-lg border border-green-200 dark:border-green-500/30 font-medium text-sm">
+          <Calendar className="w-4 h-4" /> Fall 2025 Semester
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* GPA Card */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10
-          }}
-          animate={{
-            opacity: 1,
-            y: 0
-          }}
-          className="card p-6 flex items-center gap-6">
-          
-          <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
-            <svg
-              className="w-full h-full transform -rotate-90"
-              viewBox="0 0 36 36">
-              
-              <path
-                className="text-surface-200"
-                strokeWidth="3"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              
-              <path
-                className="text-academic-500"
-                strokeWidth="3"
-                strokeDasharray="86, 100"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              
-            </svg>
-            <span className="absolute text-sm font-bold text-navy-900">
-              3.45
-            </span>
-          </div>
-          <div>
-            <p className="text-sm text-navy-400 font-medium">Cumulative GPA</p>
-            <p className="text-xs text-navy-300 mt-1">Out of 4.0</p>
-          </div>
-        </motion.div>
+      {/* 1. Academic Documents Section */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 text-black dark:text-white font-bold text-xl">
+          <FileText className="w-6 h-6 text-green-500" />
+          <h2>Academic Documents</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {documents.map((doc, idx) => (
+            <motion.div 
+              key={idx} 
+              className="bg-white dark:bg-slate-800 p-6 rounded-[12px] border border-gray-200 dark:border-slate-700 flex items-center justify-between h-36 shadow-sm dark:shadow-lg hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-500">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-sm text-black dark:text-white leading-tight line-clamp-2 px-1">{doc.name}</h3>
+                  <div className="flex gap-2 mt-1 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-slate-700 rounded">{doc.type}</span>
+                    <span>{doc.size}</span>
+                  </div>
+                </div>
+              </div>
+              <button 
+                className="ml-4 flex-shrink-0 p-2 text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300 cursor-pointer"
+                onClick={() => alert(`Downloading ${doc.name}`)}
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-        {/* Credits Card */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10
-          }}
-          animate={{
-            opacity: 1,
-            y: 0
-          }}
-          transition={{
-            delay: 0.1
-          }}
-          className="card p-6 flex flex-col justify-center">
-          
-          <div className="flex justify-between items-end mb-2">
+      {/* 2. Major Tracks Section */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 text-black dark:text-white font-bold text-xl">
+          <GraduationCap className="w-6 h-6 text-green-500" />
+          <h2>Major Tracks</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {majors.map((major, idx) => (
+            <motion.div 
+              key={idx} 
+              className="bg-white dark:bg-slate-800 p-8 rounded-[12px] border border-gray-200 dark:border-slate-700 h-[280px] flex flex-col shadow-sm dark:shadow-lg hover:shadow-md transition-all"
+            >
+              <div className="flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-2xl mx-auto mb-6 text-green-500">
+                <GraduationCap className="w-10 h-10" />
+              </div>
+              <h3 className="text-center font-bold text-xl text-black dark:text-white mb-4 leading-tight line-clamp-2 px-2 mx-auto max-w-xs">{major.title}</h3>
+              <p className="text-center text-sm text-gray-600 dark:text-gray-300 mb-8">{major.faculty} | {major.years} Years | {major.credits} Credit Hours</p>
+              <button 
+                className="mt-auto mx-auto w-full max-w-[200px] bg-white dark:bg-slate-700 border-2 border-green-500 text-green-500 dark:text-green-400 font-bold py-3 px-6 rounded-xl hover:bg-green-500 hover:text-white dark:hover:bg-green-500 dark:hover:text-white transition-all"
+                onClick={() => alert(`Downloading ${major.title} curriculum`)}
+              >
+                Download Curriculum
+              </button>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. Full Timetable Section */}
+      <section className="space-y-4">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-[12px] border border-gray-200 dark:border-slate-700 flex flex-col lg:flex-row lg:items-center lg:gap-8 shadow-sm dark:shadow-lg">
+          <div className="flex items-start lg:flex-row lg:items-center gap-6 mb-6 lg:mb-0 flex-1">
+            <div className="flex-shrink-0 w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-500 mt-1">
+              <Calendar className="w-8 h-8" />
+            </div>
             <div>
-              <p className="text-sm text-navy-400 font-medium">
-                Credits Completed
-              </p>
-              <p className="text-2xl font-bold text-navy-900 mt-1">
-                78{' '}
-                <span className="text-sm font-normal text-navy-300">/ 140</span>
-              </p>
-            </div>
-            <BookOpen className="w-6 h-6 text-blue-500 mb-1" />
-          </div>
-          <div className="w-full bg-surface-200 rounded-full h-2 mt-2">
-            <div
-              className="bg-blue-500 h-2 rounded-full"
-              style={{
-                width: '55%'
-              }}>
+              <h3 className="text-2xl font-bold text-black dark:text-white mb-2">Fall 2025 – Full Timetable</h3>
+              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">Complete weekly schedule with all your registered courses and exam dates</p>
             </div>
           </div>
-        </motion.div>
-
-        {/* Current Courses */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10
-          }}
-          animate={{
-            opacity: 1,
-            y: 0
-          }}
-          transition={{
-            delay: 0.2
-          }}
-          className="card p-6 flex items-center gap-4">
-          
-          <div className="p-4 rounded-xl bg-purple-50 text-purple-500">
-            <Award className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-sm text-navy-400 font-medium">Current Courses</p>
-            <p className="text-2xl font-bold text-navy-900 mt-1">6</p>
-            <p className="text-xs text-navy-300 mt-1">16 Total Credits</p>
-          </div>
-        </motion.div>
-
-        {/* Academic Standing */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10
-          }}
-          animate={{
-            opacity: 1,
-            y: 0
-          }}
-          transition={{
-            delay: 0.3
-          }}
-          className="card p-6 flex flex-col justify-center items-start">
-          
-          <p className="text-sm text-navy-400 font-medium mb-3">
-            Academic Standing
-          </p>
-          <div className="flex items-center gap-2 bg-status-approved/10 text-status-approved px-4 py-2 rounded-lg font-semibold w-full">
-            <CheckCircle2 className="w-5 h-5" />
-            Good Standing
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Course List Table */}
-        <div className="lg:col-span-2 card overflow-hidden">
-          <div className="p-6 border-b border-surface-200 bg-surface-50">
-            <h2 className="text-lg font-bold text-navy-900">
-              Registered Courses
-            </h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface-100 text-navy-400 text-sm">
-                  <th className="p-4 font-medium">Course Code</th>
-                  <th className="p-4 font-medium">Course Name</th>
-                  <th className="p-4 font-medium">Instructor</th>
-                  <th className="p-4 font-medium">Schedule</th>
-                  <th className="p-4 font-medium text-center">Credits</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm divide-y divide-surface-100">
-                {courses.map((course, idx) =>
-                <tr
-                  key={idx}
-                  className="hover:bg-surface-50 transition-colors">
-                  
-                    <td className="p-4 font-semibold text-navy-600">
-                      {course.code}
-                    </td>
-                    <td className="p-4 font-medium text-navy-900">
-                      {course.name}
-                    </td>
-                    <td className="p-4 text-navy-500">{course.instructor}</td>
-                    <td className="p-4 text-navy-500">{course.schedule}</td>
-                    <td className="p-4 text-center font-medium text-navy-900">
-                      {course.credits}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto lg:flex-shrink-0">
+            <button 
+              className="flex items-center justify-center gap-2 px-8 py-4 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:border-black hover:bg-gray-100 dark:hover:border-white dark:hover:bg-slate-800 transition-all w-full sm:w-auto text-sm"
+              onClick={() => alert('Opening Fall 2025 Timetable')}
+            >
+              <ExternalLink className="w-4 h-4" /> View Timetable
+            </button>
+            <button 
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-all w-full sm:w-auto text-sm shadow-lg hover:shadow-xl"
+              onClick={() => alert('Downloading Fall 2025 Full Timetable PDF')}
+            >
+              <Download className="w-4 h-4" /> Download PDF
+            </button>
           </div>
         </div>
-
-        {/* GPA Trend */}
-        <div className="card p-6 flex flex-col">
-          <h2 className="text-lg font-bold text-navy-900 mb-6">GPA Trend</h2>
-          <div className="flex-grow flex items-end justify-between gap-2 h-48 mt-auto pt-4 border-b border-surface-200 pb-2">
-            {[
-            {
-              sem: 'Fall 23',
-              gpa: 3.2,
-              height: '80%'
-            },
-            {
-              sem: 'Spr 24',
-              gpa: 3.35,
-              height: '84%'
-            },
-            {
-              sem: 'Fall 24',
-              gpa: 3.4,
-              height: '85%'
-            },
-            {
-              sem: 'Spr 25',
-              gpa: 3.45,
-              height: '86%'
-            }].
-            map((item, idx) =>
-            <div
-              key={idx}
-              className="flex flex-col items-center gap-2 w-full group">
-              
-                <span className="text-xs font-bold text-navy-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {item.gpa}
-                </span>
-                <div
-                className="w-full max-w-[40px] bg-academic-200 group-hover:bg-academic-500 rounded-t-md transition-colors duration-300"
-                style={{
-                  height: item.height
-                }}>
-              </div>
-                <span className="text-xs text-navy-400 mt-2">{item.sem}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>);
-
+      </section>
+    </div>
+  );
 }
+

@@ -10,11 +10,7 @@
 
 @layer base {
   body {
-    @apply bg-surface-100 text-navy-900 font-sans antialiased;
-  }
-  .dark body,
-  .dark {
-    @apply text-white;
+    @apply bg-white dark:bg-navy-900 text-navy-900 dark:text-white font-sans antialiased;
   }
 }
 @layer components {
@@ -22,33 +18,29 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full;
   }
   .card {
-    @apply bg-surface-50 rounded-xl shadow-card border border-surface-200 overflow-hidden transition-all duration-200;
+    @apply bg-white dark:bg-navy-800 rounded-xl border border-gray-100 dark:border-navy-700 overflow-hidden transition-all duration-200;
   }
   .dark .card {
-    @apply bg-dark-card border-dark-border shadow-dark-card;
+    @apply bg-navy-800 border-navy-700;
   }
   .card-hover {
-    @apply hover:shadow-card-hover hover:-translate-y-1;
-  }
-  .dark .card-hover {
-    @apply hover:shadow-dark-card-hover;
   }
   .btn-primary {
     @apply bg-navy-500 text-white px-4 py-2 rounded-lg font-medium transition-colors hover:bg-navy-600 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2;
   }
   .dark .btn-primary {
-    @apply bg-brand-green hover:bg-brand-green-dark ring-offset-dark-bg;
-  }
+      @apply bg-secondary hover:bg-navy-600 ring-offset-navy-900;
+    }
   .btn-secondary {
-    @apply bg-surface-100 text-navy-600 px-4 py-2 rounded-lg font-medium transition-colors hover:bg-surface-200 focus:outline-none focus:ring-2 focus:ring-surface-300 focus:ring-offset-2 border border-surface-200;
-  }
-  .dark .btn-secondary {
-    @apply bg-dark-card text-white border-dark-border hover:bg-dark-card-hover ring-offset-dark-bg;
-  }
+      @apply bg-gray-100 dark:bg-navy-800 text-navy-600 dark:text-white px-4 py-2 rounded-lg font-medium transition-colors hover:bg-gray-200 dark:hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-navy-500 focus:ring-offset-2 border border-gray-200 dark:border-navy-700;
+    }
+    .dark .btn-secondary {
+      @apply bg-navy-800 text-white border-navy-700 hover:bg-navy-700 ring-offset-navy-900;
+    }
   .btn-accent {
-    @apply bg-academic-500 text-white px-4 py-2 rounded-lg font-medium transition-colors hover:bg-academic-600 focus:outline-none focus:ring-2 focus:ring-academic-500 focus:ring-offset-2;
-  }
+      @apply bg-secondary text-white px-4 py-2 rounded-lg font-medium transition-colors hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:ring-offset-2;
+    }
   .dark .btn-accent {
-    @apply bg-brand-green hover:bg-brand-green-dark ring-offset-dark-bg;
-  }
+      @apply bg-secondary hover:bg-green-600 ring-offset-navy-900;
+    }
 }
