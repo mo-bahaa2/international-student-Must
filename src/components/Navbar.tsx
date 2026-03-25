@@ -16,13 +16,12 @@ import {
 import type { PageType, Language } from '../App';
 
 interface NavbarProps {
-  currentPage: PageType;
-  onNavigate: (page: PageType) => void;
-  language: Language;
-  onToggleLanguage: (lang: Language) => void;
-  darkMode: boolean;
-  onToggleDarkMode: () => void;
+    language: Language;
+    onToggleLanguage: (lang: Language) => void;
+    darkMode: boolean;
+    onToggleDarkMode: () => void;
 }
+
 
 export function Navbar({
   currentPage,

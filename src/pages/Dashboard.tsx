@@ -19,9 +19,9 @@ import {
 import type { PageType } from '../App';
 
 interface DashboardProps {
-  onNavigate: (page: PageType) => void;
-  darkMode?: boolean;
+    darkMode?: boolean;
 }
+
 
 export function Dashboard({ onNavigate, darkMode = false }: DashboardProps) {
   const { t } = useTranslation();
