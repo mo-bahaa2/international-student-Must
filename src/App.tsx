@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { HeroSlider } from './components/HeroSlider';
 // Pages
 import { Dashboard } from './pages/Dashboard';
 import { Academics } from './pages/Academics';
@@ -34,6 +37,7 @@ function AppContent() {
 
   const toggleLanguage = (lang: Language) => {
     languageDispatch({ type: 'SET_LANGUAGE', payload: lang });
+    i18n.changeLanguage(lang);
   };
 
   const toggleDarkMode = () => {
@@ -90,6 +94,7 @@ function AppContent() {
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
       />
+      <HeroSlider onNavigate={handleNavigate} />
       <main className="flex-1">
         <AnimatePresence mode="wait">
           <motion.div
@@ -104,19 +109,24 @@ function AppContent() {
         </AnimatePresence>
       </main>
       <Footer darkMode={darkMode} />
+      <FloatingSocialBar />
     </div>
   );
 }
 
+import { FloatingSocialBar } from './components/FloatingSocialBar';
+
 export function App() {
   return (
-    <LanguageProvider>
-      <ProfileProvider>
-        <RequestsProvider>
-          <AppContent />
-        </RequestsProvider>
-      </ProfileProvider>
-    </LanguageProvider>
+    <I18nextProvider i18n={i18n}>
+      <LanguageProvider>
+        <ProfileProvider>
+          <RequestsProvider>
+            <AppContent />
+          </RequestsProvider>
+        </ProfileProvider>
+      </LanguageProvider>
+    </I18nextProvider>
   );
 }
 

@@ -12,16 +12,17 @@
   body {
     @apply bg-white dark:bg-navy-900 text-navy-900 dark:text-white font-sans antialiased;
   }
+  .dark, .dark * {
+    color: white !important;
+  }
 }
+
 @layer components {
   .page-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full;
   }
   .card {
     @apply bg-white dark:bg-navy-800 rounded-xl border border-gray-100 dark:border-navy-700 overflow-hidden transition-all duration-200;
-  }
-  .dark .card {
-    @apply bg-navy-800 border-navy-700;
   }
   .card-hover {
   }
@@ -44,3 +45,4 @@
       @apply bg-secondary hover:bg-green-600 ring-offset-navy-900;
     }
 }
+

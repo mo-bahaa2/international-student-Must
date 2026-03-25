@@ -21,7 +21,7 @@ export function Footer({ darkMode = false }: FooterProps) {
         <div className="flex justify-center mb-12">
           <div
             className={`w-28 h-28 rounded-full flex items-center justify-center overflow-hidden shadow-lg border-4 transition-colors duration-300 ${darkMode ? 'bg-white border-dark-border' : 'bg-white border-navy-400'}`}>
-            <img src="/assists/must_logo.png" alt="MUST" className="w-full h-full object-contain p-2" />
+            <img src="/must_logo.png" alt="MUST" className="w-full h-full object-contain p-2" />
           </div>
         </div>
 
@@ -133,24 +133,9 @@ export function Footer({ darkMode = false }: FooterProps) {
               </li>
             </ul>
 
-            <div className="flex gap-4 mt-6">
-{[
-                { Icon: Facebook, href: 'https://www.facebook.com/mustuni/' },
-                { Icon: Twitter, href: 'https://x.com/Must_University' },
-                { Icon: Instagram, href: 'https://www.instagram.com/mustuni/' },
-                { Icon: Linkedin, href: 'https://www.linkedin.com/school/misr-university-for-science-and-technology/' }
-              ].map(({ Icon, href }, idx) => (
-                <a
-                  key={idx}
-                  href={href}
-                  target="_blank" rel="noopener noreferrer"
-                  className={`w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#00AC5C] transition-colors duration-200 ${darkMode ? 'bg-dark-card' : 'bg-navy-600'}`}>
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
           </div>
         </div>
+
 
         {/* Bottom Bar */}
         <div

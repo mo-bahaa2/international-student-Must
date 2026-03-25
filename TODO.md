@@ -1,0 +1,1 @@
+- [x] Step 2: Update FloatingSocialBar.tsx
