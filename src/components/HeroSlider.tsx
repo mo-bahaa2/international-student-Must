@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Globe } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
-import type { PageType } from '../App';
-import { LinksBar } from './LinksBar';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const images = [
   '/images/1.jpeg',
@@ -21,22 +19,33 @@ const images = [
   '/images/WhatsApp Image 2026-03-25 at 7.29.24 PM.jpeg'
 ];
 
-export function HeroSlider({ darkMode = false }: { darkMode?: boolean }) {
+const links = [
+  { name: 'Home', path: '/' },
+  { name: 'Academics', path: '/academics' },
+  { name: 'Questionnaires', path: '/questionnaires' },
+  { name: 'Resources', path: '/resources' },
+  { name: 'Announcements', path: '/announcements' },
+  { name: 'Contact Us', path: '/ContactUs' }
+];
+
+export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
 
   useEffect(() => {
     if (!isAutoPlay) return;
+
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 4000);
+    }, 7000); //  كل 7 ثواني
+
     return () => clearInterval(interval);
   }, [isAutoPlay]);
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
     setIsAutoPlay(false);
-    setTimeout(() => setIsAutoPlay(true), 10000);
+    setTimeout(() => setIsAutoPlay(true), 9000);
   };
 
   const nextSlide = () => {
@@ -49,66 +58,82 @@ export function HeroSlider({ darkMode = false }: { darkMode?: boolean }) {
 
   return (
     <div className="relative w-full h-[70vh] md:h-screen overflow-hidden">
+
+      {/* IMAGE */}
       <AnimatePresence mode="wait">
         <motion.img
           key={currentIndex}
           src={images[currentIndex]}
-          alt={`Hero slide ${currentIndex + 1}`}
           className="w-full h-full object-cover"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.2, ease: 'easeInOut' }}
+          transition={{ duration: 1 }}
         />
       </AnimatePresence>
 
-      {/* Dark Overlay */}
+      {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/60" />
 
-      {/* Centered Title & Links */}
+      {/* CONTENT */}
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4"
       >
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-cairo leading-tight max-w-4xl mx-auto mb-12 drop-shadow-2xl">
+        {/* TITLE */}
+        <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold">
           International Students Platform
         </h1>
-        <LinksBar className="flex space-x-8 justify-center" />
+
+        {/* SPACE */}
+        <div className="h-10 md:h-16" />
+
+        {/* LINKS */}
+        <div className="flex flex-wrap justify-center gap-3 md:gap-5">
+          {links.map((item, index) => (
+            <Link
+              key={index}
+              to={item.path}
+              className="px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm md:text-base transition"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
       </motion.div>
 
-      {/* Navigation Arrows */}
+      {/* LEFT BUTTON */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 md:p-4 text-white transition-all duration-300 hover:scale-110"
-        aria-label="Previous slide"
+        className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 rounded-full p-3 text-white"
       >
         <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
       </button>
+
+      {/* RIGHT BUTTON */}
       <button
         onClick={nextSlide}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 md:p-4 text-white transition-all duration-300 hover:scale-110"
-        aria-label="Next slide"
+        className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 rounded-full p-3 text-white"
       >
         <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
       </button>
 
-      {/* Dots Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-2">
+      {/* DOTS */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
         {images.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+            className={`w-2.5 h-2.5 rounded-full transition ${
               index === currentIndex
-                ? 'bg-[#00AC5C] scale-125 shadow-lg'
-                : 'bg-white/60 hover:bg-white/80'
+                ? 'bg-[#00AC5C] scale-125'
+                : 'bg-white/60'
             }`}
-            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
+
     </div>
   );
 }
-

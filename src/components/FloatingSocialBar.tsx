@@ -3,8 +3,7 @@ import {
   Search, 
   Linkedin, 
   Facebook, 
-  Instagram, 
-  MessageCircle 
+  Instagram 
 } from 'lucide-react';
 
 export function FloatingSocialBar() {
@@ -13,24 +12,28 @@ export function FloatingSocialBar() {
     { icon: Linkedin, href: 'https://www.linkedin.com/school/misr-university-for-science-and-technology/', label: 'LinkedIn' },
     { icon: Facebook, href: 'https://www.facebook.com/mustuni/', label: 'Facebook' },
     { icon: Instagram, href: 'https://www.instagram.com/mustuni/', label: 'Instagram' },
-   
   ];
 
   return (
-    <div className="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-[99] sm:right-4 pointer-events-auto">
+    /* الحاوية الرئيسية: مثبتة في اليمين، منتصف الشاشة عمودياً */
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-[999] pointer-events-auto">
       {socialLinks.map(({ icon: Icon, href, label }) => (
         <a
           key={label}
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-className="w-14 h-14 md:w-16 md:h-16 lg:w-16 lg:h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center group border-0 text-gray-800 dark:text-white"
+          className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#00AC5C] flex items-center justify-center 
+                     text-[#00AC5C] bg-white shadow-md
+                     hover:shadow-[0_0_15px_#00AC5C]
+                     hover:scale-110
+                     hover:bg-[#00AC5C] hover:text-white
+                     transition-all duration-300 ease-in-out group"
           aria-label={label}
         >
-          <Icon className="w-7 h-7 text-gray-600 group-hover:text-emerald-500 group-hover:scale-110 transition-all duration-200" />
+          <Icon className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-200 group-hover:scale-110" />
         </a>
       ))}
     </div>
   );
 }
-
