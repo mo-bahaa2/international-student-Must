@@ -11,11 +11,8 @@ import {
   Building2,
   MessageSquare,
   Clock,
-  ChevronRight,
   BookOpen,
   GraduationCap,
-  MapPin,
-  CalendarDays
 } from 'lucide-react';
 
 interface DashboardProps {
