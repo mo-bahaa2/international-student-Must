@@ -471,3 +471,31 @@ $header-height: 105px;
     }
   }
 }
+
+/* --- RTL Support --- */
+[dir="rtl"] {
+  .must-header {
+    .desktop-nav .nav-list .nav-item {
+      .mega-menu-overlay {
+        left: auto;
+        right: 0;
+        .mega-menu-container .mega-left-panel .left-panel-item {
+          .left-panel-link .icon-chevron {
+            margin-left: 0;
+            margin-right: auto;
+            &.fa-chevron-right { transform: rotate(180deg); }
+          }
+          .mega-right-panel {
+            left: auto;
+            right: 100%;
+            box-shadow: -4px 4px 20px rgba(0,0,0,0.35);
+            .right-content-wrapper .right-panel-list .right-panel-item .deep-panel-list {
+              margin: 8px 10px 0 0;
+            }
+          }
+        }
+      }
+      .simple-dropdown { left: auto; right: 0; }
+    }
+  }
+}
