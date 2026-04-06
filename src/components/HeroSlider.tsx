@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -31,6 +31,17 @@ const links = [
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({ 0: true });
+
+  useEffect(() => {
+    images.forEach((src, index) => {
+      const image = new Image();
+      image.src = src;
+      image.onload = () => {
+        setLoadedImages((prev) => ({ ...prev, [index]: true }));
+      };
+    });
+  }, []);
 
   useEffect(() => {
     if (!isAutoPlay) return;
@@ -60,17 +71,18 @@ export function HeroSlider() {
     <div className="relative w-full h-[70vh] md:h-screen overflow-hidden">
 
       {/* IMAGE */}
-      <AnimatePresence mode="wait">
-        <motion.img
-          key={currentIndex}
-          src={images[currentIndex]}
-          className="w-full h-full object-cover"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
-        />
-      </AnimatePresence>
+      <div className="absolute inset-0">
+        {images.map((image, index) => (
+          <motion.img
+            key={image}
+            src={image}
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={false}
+            animate={{ opacity: index === currentIndex && loadedImages[index] ? 1 : 0 }}
+            transition={{ duration: 1.1, ease: 'easeInOut' }}
+          />
+        ))}
+      </div>
 
       {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/60" />
