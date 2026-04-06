@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { apiRequest, getCurrentApiBaseUrl } from '../services/api';
 
-const images = [
+const fallbackImages = [
   '/images/1.jpeg',
   '/images/3.jpeg',
   '/images/4.jpeg',
@@ -19,6 +20,63 @@ const images = [
   '/images/WhatsApp Image 2026-03-25 at 7.29.24 PM.jpeg'
 ];
 
+type SliderImage = {
+  id: number | string;
+  src: string;
+  title: string;
+};
+
+type HeroSlideApiItem = {
+  id: number;
+  title?: string | null;
+  image?: {
+    url?: string;
+  };
+  attributes?: {
+    title?: string | null;
+    image?: {
+      data?: {
+        attributes?: {
+          url?: string;
+        };
+      };
+    };
+  };
+};
+
+type HeroSlidesApiResponse = {
+  data?: HeroSlideApiItem[];
+};
+
+const fallbackSlides: SliderImage[] = fallbackImages.map((src, index) => ({
+  id: `fallback-${index}`,
+  src,
+  title: `Slide ${index + 1}`,
+}));
+
+const getStrapiBaseUrl = () => {
+  const base = getCurrentApiBaseUrl().trim();
+  return base.endsWith('/') ? base.slice(0, -1) : base;
+};
+
+const getSlideImageUrl = (item: HeroSlideApiItem): string | undefined => {
+  return item.attributes?.image?.data?.attributes?.url || item.image?.url;
+};
+
+const getSlideTitle = (item: HeroSlideApiItem, index: number): string => {
+  return item.attributes?.title || item.title || `Slide ${index + 1}`;
+};
+
+const toAbsoluteUrl = (url: string, baseUrl: string) => {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+  if (!baseUrl) {
+    return url;
+  }
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 const links = [
   { name: 'Home', path: '/' },
   { name: 'Academics', path: '/academics' },
@@ -31,27 +89,80 @@ const links = [
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({ 0: true });
+  const [slides, setSlides] = useState<SliderImage[]>(fallbackSlides);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
-    images.forEach((src, index) => {
+    const fetchSlides = async () => {
+      const baseUrl = getStrapiBaseUrl();
+
+      try {
+        const payload = await apiRequest<HeroSlidesApiResponse>(
+          '/api/hero-slides?populate=image&filters[isActive][$eq]=true&sort=order:asc',
+          { auth: false }
+        );
+        const apiItems = Array.isArray(payload?.data) ? payload.data : [];
+
+        const mappedSlides = apiItems
+          .map((item, index): SliderImage | null => {
+            const imageUrl = getSlideImageUrl(item);
+
+            if (!imageUrl) {
+              return null;
+            }
+
+            return {
+              id: item.id,
+              src: toAbsoluteUrl(imageUrl, baseUrl),
+              title: getSlideTitle(item, index),
+            };
+          })
+          .filter((item): item is SliderImage => item !== null);
+
+        if (mappedSlides.length > 0) {
+          setSlides(mappedSlides);
+          setCurrentIndex(0);
+        } else {
+          setSlides(fallbackSlides);
+        }
+      } catch {
+        setSlides(fallbackSlides);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSlides();
+  }, []);
+
+  useEffect(() => {
+    setLoadedImages({});
+
+    slides.forEach((slide, index) => {
       const image = new Image();
-      image.src = src;
+      image.src = slide.src;
       image.onload = () => {
         setLoadedImages((prev) => ({ ...prev, [index]: true }));
       };
     });
-  }, []);
+  }, [slides]);
 
   useEffect(() => {
-    if (!isAutoPlay) return;
+    if (currentIndex >= slides.length) {
+      setCurrentIndex(0);
+    }
+  }, [currentIndex, slides.length]);
+
+  useEffect(() => {
+    if (!isAutoPlay || slides.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, 7000); //  كل 7 ثواني
 
     return () => clearInterval(interval);
-  }, [isAutoPlay]);
+  }, [isAutoPlay, slides.length]);
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
@@ -60,25 +171,34 @@ export function HeroSlider() {
   };
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
+    setCurrentIndex((prev) => (prev + 1) % slides.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
   };
+
+  if (isLoading) {
+    return (
+      <div className="relative w-full h-[70vh] md:h-screen overflow-hidden bg-gray-800">
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-[70vh] md:h-screen overflow-hidden">
 
       {/* IMAGE */}
       <div className="absolute inset-0">
-        {images.map((image, index) => (
+        {slides.map((slide, index) => (
           <motion.img
-            key={image}
-            src={image}
+            key={slide.id}
+            src={slide.src}
+            alt={slide.title}
             className="absolute inset-0 w-full h-full object-cover"
             initial={false}
-            animate={{ opacity: index === currentIndex && loadedImages[index] ? 1 : 0 }}
+            animate={{ opacity: index === currentIndex && (loadedImages[index] || index === currentIndex) ? 1 : 0 }}
             transition={{ duration: 1.1, ease: 'easeInOut' }}
           />
         ))}
@@ -118,6 +238,7 @@ export function HeroSlider() {
       {/* LEFT BUTTON */}
       <button
         onClick={prevSlide}
+        disabled={slides.length <= 1}
         className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 rounded-full p-3 text-white"
       >
         <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
@@ -126,6 +247,7 @@ export function HeroSlider() {
       {/* RIGHT BUTTON */}
       <button
         onClick={nextSlide}
+        disabled={slides.length <= 1}
         className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 rounded-full p-3 text-white"
       >
         <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
@@ -133,9 +255,9 @@ export function HeroSlider() {
 
       {/* DOTS */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-        {images.map((_, index) => (
+        {slides.map((slide, index) => (
           <button
-            key={index}
+            key={slide.id}
             onClick={() => goToSlide(index)}
             className={`w-2.5 h-2.5 rounded-full transition ${
               index === currentIndex
