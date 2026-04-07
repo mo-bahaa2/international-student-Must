@@ -20,7 +20,9 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
 
   const location = useLocation();
   const { user, logout, isAdmin } = useAuth();
-  const strapiAdminUrl = `${(import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337').replace(/\/$/, '')}/admin`;
+  const strapiAdminUrl = import.meta.env.VITE_STRAPI_URL
+    ? `${import.meta.env.VITE_STRAPI_URL.replace(/\/$/, '')}/admin`
+    : '#';
 
   // Close menus on route change
   useEffect(() => {

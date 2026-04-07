@@ -281,6 +281,28 @@ export function isContentLoaded(content: any): boolean {
 }
 
 /**
+ * Helper function to construct proper media/image URL with Strapi base for relative paths
+ */
+export function getStrapiMediaUrl(relativePath: string): string {
+  if (!relativePath) return '';
+  
+  // Already absolute URL
+  if (relativePath.startsWith('http')) {
+    return relativePath;
+  }
+  
+  // Get the Strapi backend URL from env
+  const strapiBase = (import.meta.env.VITE_STRAPI_URL || '').replace(/\/$/, '');
+  if (!strapiBase) {
+    // Fallback: return as-is, the server might handle it
+    return relativePath;
+  }
+  
+  // Construct full URL: base + path
+  return `${strapiBase}${relativePath.startsWith('/') ? '' : '/'}${relativePath}`;
+}
+
+/**
  * Helper function to get image URL from Strapi media response
  */
 export function getImageUrl(imageData: any): string | null {
@@ -288,9 +310,9 @@ export function getImageUrl(imageData: any): string | null {
     return null;
   }
   const url = imageData.data.attributes.url;
-  // Handle relative URLs from Strapi
+  // Handle relative URLs from Strapi - construct absolute URL for production
   if (url.startsWith('/uploads') || url.startsWith('http')) {
-    return url;
+    return getStrapiMediaUrl(url);
   }
   return url;
 }

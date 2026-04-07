@@ -1,10 +1,13 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
 const getApiBaseUrl = (): string => {
-  const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+  // In production: use VITE_API_BASE_URL (Strapi backend URL)
+  // In dev: VITE_API_URL would be /strapi (local proxy) or VITE_API_BASE_URL
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   if (!baseUrl) {
-    return 'http://localhost:1337';
+    console.warn('VITE_API_BASE_URL is not configured');
+    return '';
   }
 
   return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;

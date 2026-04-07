@@ -9,7 +9,9 @@ export function Profile() {
   const avatarSrc = rawAvatarUrl
     ? rawAvatarUrl.startsWith('http')
       ? rawAvatarUrl
-      : `${strapiBase}${rawAvatarUrl.startsWith('/') ? '' : '/'}${rawAvatarUrl}`
+      : strapiBase
+        ? `${strapiBase}${rawAvatarUrl.startsWith('/') ? '' : '/'}${rawAvatarUrl}`
+        : rawAvatarUrl
     : 'https://via.placeholder.com/80x80?text=User';
 
   return (
