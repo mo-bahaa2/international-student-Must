@@ -4,12 +4,20 @@ import { useAuth } from '../context/AuthContext';
 export function Profile() {
   const { user } = useAuth();
 
+  const strapiBase = (import.meta.env.VITE_STRAPI_URL || '').replace(/\/$/, '');
+  const rawAvatarUrl = user?.avatar?.url || '';
+  const avatarSrc = rawAvatarUrl
+    ? rawAvatarUrl.startsWith('http')
+      ? rawAvatarUrl
+      : `${strapiBase}${rawAvatarUrl.startsWith('/') ? '' : '/'}${rawAvatarUrl}`
+    : 'https://via.placeholder.com/80x80?text=User';
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
         <div className="flex items-center gap-4 mb-6">
           <img
-            src={user?.avatar?.url || 'https://via.placeholder.com/80x80?text=User'}
+            src={avatarSrc}
             alt={user?.displayName || user?.username || 'User'}
             className="w-20 h-20 rounded-full object-cover"
           />
@@ -20,22 +28,28 @@ export function Profile() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-gray-500 dark:text-gray-400">User Type</p>
-            <p className="font-medium text-gray-900 dark:text-white">{user?.userType || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-gray-500 dark:text-gray-400">University ID</p>
-            <p className="font-medium text-gray-900 dark:text-white">{user?.universityId || 'N/A'}</p>
-          </div>
+          {user?.userType && (
+            <div>
+              <p className="text-gray-500 dark:text-gray-400">User Type</p>
+              <p className="font-medium text-gray-900 dark:text-white">{user.userType}</p>
+            </div>
+          )}
+          {user?.universityId && (
+            <div>
+              <p className="text-gray-500 dark:text-gray-400">University ID</p>
+              <p className="font-medium text-gray-900 dark:text-white">{user.universityId}</p>
+            </div>
+          )}
           <div className="md:col-span-2">
             <p className="text-gray-500 dark:text-gray-400">Bio</p>
             <p className="font-medium text-gray-900 dark:text-white">{user?.bio || 'No bio yet.'}</p>
           </div>
-          <div className="md:col-span-2">
-            <p className="text-gray-500 dark:text-gray-400">Phone</p>
-            <p className="font-medium text-gray-900 dark:text-white">{user?.phoneNumber || 'N/A'}</p>
-          </div>
+          {user?.phoneNumber && (
+            <div className="md:col-span-2">
+              <p className="text-gray-500 dark:text-gray-400">Phone</p>
+              <p className="font-medium text-gray-900 dark:text-white">{user.phoneNumber}</p>
+            </div>
+          )}
         </div>
 
         <div className="mt-6">
