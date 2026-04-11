@@ -11,6 +11,7 @@ import {
   Resources, 
   Announcements, 
   ContactUs,
+  StrapiCollectionResponse,
   StrapiSingleTypeResponse 
 } from '../types/strapi';
 
@@ -21,6 +22,7 @@ const CMS_API_ENDPOINTS = {
   RESOURCES: '/api/resources',
   ANNOUNCEMENTS: '/api/announcements',
   CONTACT_US: '/api/contact-us',
+  PAGES: '/api/pages',
 } as const;
 
 /** Default populate query to fetch all relations */
@@ -33,6 +35,7 @@ type CmsBlock = {
   body?: string;
   quote?: string;
   author?: string;
+  anchor?: string;
   media?: {
     url?: string;
     alternativeText?: string;
@@ -56,6 +59,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
         return {
           type: 'rich-text' as const,
           content: block.content,
+          anchor: block.anchor,
         };
       }
 
@@ -64,6 +68,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
           type: 'quote' as const,
           quote: block.quote,
           author: block.author,
+          anchor: block.anchor,
         };
       }
 
@@ -73,6 +78,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
           url: block.media.url,
           alt: block.media.alternativeText,
           caption: block.media.caption,
+          anchor: block.anchor,
         };
       }
 
@@ -86,6 +92,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
               title: slide.title,
               description: slide.description,
             })),
+          anchor: block.anchor,
         };
       }
 
@@ -95,6 +102,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
         return {
           type: 'rich-text' as const,
           content: block.body,
+          anchor: block.anchor,
         };
       }
 
@@ -103,6 +111,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
           type: 'quote' as const,
           quote: block.quote,
           author: block.author,
+          anchor: block.anchor,
         };
       }
 
@@ -112,6 +121,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
           url: block.media.url,
           alt: block.media.alternativeText,
           caption: block.media.caption,
+          anchor: block.anchor,
         };
       }
 
@@ -125,6 +135,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
               title: slide.title,
               description: slide.description,
             })),
+          anchor: block.anchor,
         };
       }
 
@@ -153,6 +164,10 @@ function normalizeSingleTypeResponse<T extends { blocks?: unknown }>(data: T): T
   };
 }
 
+function normalizePageResponse<T extends { blocks?: unknown }>(page: T): T {
+  return normalizeSingleTypeResponse(page);
+}
+
 /**
  * Fetch homepage content
  */
@@ -165,6 +180,35 @@ export async function getHomepage(): Promise<Homepage> {
     return normalizeSingleTypeResponse((response.data || {}) as Homepage);
   } catch (error) {
     console.error('Error fetching homepage:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch a CMS page by slug from the generic pages collection.
+ */
+export async function getPageBySlug(slug: string): Promise<Homepage> {
+  const normalizedSlug = slug.trim().toLowerCase();
+
+  if (!normalizedSlug) {
+    throw new Error('Page slug is required.');
+  }
+
+  try {
+    const response = await apiRequest<StrapiCollectionResponse<Homepage>>(
+      `${CMS_API_ENDPOINTS.PAGES}?filters[slug][$eq]=${encodeURIComponent(normalizedSlug)}&${DEFAULT_POPULATE}`,
+      { auth: false }
+    );
+
+    const page = Array.isArray(response.data) ? response.data[0] : undefined;
+
+    if (!page) {
+      throw new Error(`Page not found for slug: ${normalizedSlug}`);
+    }
+
+    return normalizePageResponse(page as Homepage);
+  } catch (error) {
+    console.error(`Error fetching page by slug (${normalizedSlug}):`, error);
     throw error;
   }
 }

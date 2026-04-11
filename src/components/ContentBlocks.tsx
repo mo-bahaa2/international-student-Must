@@ -19,7 +19,9 @@ export function ContentBlocks({ blocks }: ContentBlocksProps) {
   return (
     <div className="space-y-6">
       {blocks.map((block, idx) => (
-        <ContentBlock key={idx} block={block} />
+        <section key={idx} id={block.anchor || undefined} className="scroll-mt-28">
+          <ContentBlock block={block} />
+        </section>
       ))}
     </div>
   );
@@ -32,10 +34,19 @@ interface ContentBlockProps {
 function ContentBlock({ block }: ContentBlockProps) {
   const safeContent = block.type === 'rich-text' ? sanitizeHtml(block.content) : '';
   const looksLikeHtml = block.type === 'rich-text' ? /<\/?[a-z][\s\S]*>/i.test(safeContent) : false;
+  const renderHeading = (Tag: 'h1' | 'h2' | 'h3', className: string) => {
+    return ({ children, ...props }: any) => {
+      const text = getTextContent(children);
+      const id = text ? slugify(text) : undefined;
+
+      return <Tag id={id} className={className} {...props}>{children}</Tag>;
+    };
+  };
+
   const markdownComponents = {
-    h1: (props: any) => <h1 className="text-3xl md:text-4xl font-bold mt-8 mb-4 text-gray-900 dark:text-white" {...props} />,
-    h2: (props: any) => <h2 className="text-2xl md:text-3xl font-bold mt-7 mb-3 text-gray-900 dark:text-white" {...props} />,
-    h3: (props: any) => <h3 className="text-xl md:text-2xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white" {...props} />,
+    h1: renderHeading('h1', 'text-3xl md:text-4xl font-bold mt-8 mb-4 text-gray-900 dark:text-white scroll-mt-28'),
+    h2: renderHeading('h2', 'text-2xl md:text-3xl font-bold mt-7 mb-3 text-gray-900 dark:text-white scroll-mt-28'),
+    h3: renderHeading('h3', 'text-xl md:text-2xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white scroll-mt-28'),
     p: (props: any) => <p className="text-base md:text-lg leading-8 mb-4 text-gray-800 dark:text-gray-200" {...props} />,
     ul: (props: any) => <ul className="list-disc pl-6 mb-4 space-y-2 text-base md:text-lg text-gray-800 dark:text-gray-200" {...props} />,
     ol: (props: any) => <ol className="list-decimal pl-6 mb-4 space-y-2 text-base md:text-lg text-gray-800 dark:text-gray-200" {...props} />,
@@ -144,5 +155,30 @@ function sanitizeHtml(html: string): string {
   let sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   sanitized = sanitized.replace(/on\w+\s*=\s*['"]/gi, 'data-event="');
   return sanitized;
+}
+
+function getTextContent(node: any): string {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(getTextContent).join(' ');
+  }
+
+  if (node && typeof node === 'object' && 'props' in node) {
+    return getTextContent((node as any).props?.children);
+  }
+
+  return '';
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 

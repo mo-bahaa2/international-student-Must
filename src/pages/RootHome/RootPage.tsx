@@ -1,10 +1,10 @@
 import { CmsSingleTypePage } from '../../components/CmsSingleTypePage';
-import { getHomepage } from '../../services/cmsApi';
+import { getPageBySlug } from '../../services/cmsApi';
 
 export function RootPage() {
     return (
         <CmsSingleTypePage
-            fetcher={getHomepage}
+            fetcher={() => getPageBySlug('home')}
             fallbackTitle="Home"
             fallbackSubtitle="Welcome"
         />

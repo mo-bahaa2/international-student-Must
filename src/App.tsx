@@ -5,6 +5,7 @@ import { MustHeader } from './components/MustHeader/MustHeader';
 import { Footer } from './components/Footer';
 import { HeroSlider } from './components/HeroSlider';
 import { FloatingSocialBar } from './components/FloatingSocialBar';
+import { ChatPanel } from './components/Chat/ChatPanel';
 import { LinksBar } from './components/LinksBar';
 // Pages
 import {Academics} from "./pages/Accademics/Academics.tsx";
@@ -18,12 +19,14 @@ import { Settings } from './pages/Settings';
 import { SubmitRequest } from './pages/SubmitRequest';
 import { MyRequests } from './pages/MyRequests';
 import { RootPage } from './pages/RootHome/RootPage';
+import { CmsPage } from './pages/CmsPage';
 import { NotFound } from './pages/NotFound';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ProfileProvider } from './contexts/ProfileContext';
 import { RequestsProvider } from './contexts/RequestsContext';
 import { AuthProvider } from './context/AuthContext';
+import { ChatStoreProvider } from './context/ChatContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export type PageType = 'academics' | 'questionnaires' | 'resources' | 'announcements' | 'notifications' | 'contact-us' | 'profile' | 'settings' | 'submit-request' | 'my-requests';
@@ -62,6 +65,7 @@ function AppContent() {
             className="min-h-[calc(100vh-140px)]">
             <Routes>
               <Route path="/" element={<RootPage />} />
+              <Route path="/home" element={<RootPage />} />
               <Route path="/academics" element={<Academics />} />
               <Route path="/questionnaires" element={<Questionnaires />} />
               <Route path="/resources" element={<Resources />} />
@@ -74,6 +78,7 @@ function AppContent() {
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/submit-request" element={<SubmitRequest />} />
   <Route path="/my-requests" element={<MyRequests />} />
+              <Route path="/:slug" element={<CmsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
 
@@ -82,6 +87,7 @@ function AppContent() {
       </main>
       <Footer darkMode={darkMode} />
       <FloatingSocialBar />
+      <ChatPanel />
     </div>
   );
 }
@@ -89,13 +95,15 @@ function AppContent() {
 export function App() {
   return (
     <AuthProvider>
-      <ProfileProvider>
-        <RequestsProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </RequestsProvider>
-      </ProfileProvider>
+      <ChatStoreProvider>
+        <ProfileProvider>
+          <RequestsProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </RequestsProvider>
+        </ProfileProvider>
+      </ChatStoreProvider>
     </AuthProvider>
   );
 }

@@ -19,7 +19,7 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
   const [mobileActiveSubItem, setMobileActiveSubItem] = useState<MenuItem | null>(null);
 
   const location = useLocation();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout } = useAuth();
   const strapiAdminUrl = import.meta.env.VITE_STRAPI_URL
     ? `${import.meta.env.VITE_STRAPI_URL.replace(/\/$/, '')}/admin`
     : '#';
@@ -260,6 +260,17 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
               <i className={`fas ${!darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
             </button>
 
+            <a
+              href={strapiAdminUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-auth login-btn ms-2"
+              style={{ textDecoration: 'none' }}
+            >
+              <i className="fas fa-gauge-high"></i>
+              <span>Dashboard</span>
+            </a>
+
             {!user ? (
               <>
                 <Link to="/login" className="btn-auth login-btn ms-2" style={{ textDecoration: 'none' }}>
@@ -273,18 +284,6 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
               </>
             ) : (
               <>
-                {isAdmin && (
-                  <a
-                    href={strapiAdminUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-auth login-btn ms-2"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <i className="fas fa-gauge-high"></i>
-                    <span>Dashboard</span>
-                  </a>
-                )}
                 <Link to="/profile" className="btn-auth login-btn ms-2" style={{ textDecoration: 'none' }}>
                   <i className="fas fa-user"></i>
                   <span>{user.displayName || user.username}</span>
@@ -411,6 +410,9 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
           </ul>
 
           <div style={{ borderTop: '1px solid #2d4278', marginTop: '12px', paddingTop: '12px' }}>
+            <a href={strapiAdminUrl} target="_blank" rel="noopener noreferrer" className="mobile-nav-link" onClick={closeMenus}>
+              Dashboard
+            </a>
             {!user ? (
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Link to="/login" className="mobile-nav-link" onClick={closeMenus}>Login</Link>
@@ -421,11 +423,6 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
                 <Link to="/profile" className="mobile-nav-link" onClick={closeMenus}>
                   {user.displayName || user.username}
                 </Link>
-                {isAdmin && (
-                  <a href={strapiAdminUrl} target="_blank" rel="noopener noreferrer" className="mobile-nav-link" onClick={closeMenus}>
-                    Dashboard
-                  </a>
-                )}
                 <button className="mobile-nav-link" onClick={handleLogout} style={{ textAlign: 'left', background: 'transparent', border: 'none' }}>
                   Logout
                 </button>

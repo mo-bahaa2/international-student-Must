@@ -1,0 +1,2490 @@
+diff --git a/TODO.md b/TODO.md
+deleted file mode 100644
+index 32b3f10..0000000
+--- a/TODO.md
++++ /dev/null
+@@ -1,6 +0,0 @@
+-# Fix Dashboard White Screen (Missing useTranslation)
+-
+-## Steps:
+-- [x] 1. Add import { useTranslation } from 'react-i18next' to src/pages/Dashboard.tsx
+-- [x] 2. Reload dev server / test /dashboard
+-- [x] 3. Mark complete and finalize task (rootpage already set)
+diff --git a/public/images/1.jpeg b/public/images/1.jpeg
+deleted file mode 100644
+index 57e1d04..0000000
+Binary files a/public/images/1.jpeg and /dev/null differ
+diff --git a/public/images/10.jpeg b/public/images/10.jpeg
+deleted file mode 100644
+index 3275a05..0000000
+Binary files a/public/images/10.jpeg and /dev/null differ
+diff --git a/public/images/11.jpeg b/public/images/11.jpeg
+deleted file mode 100644
+index cf8cbc4..0000000
+Binary files a/public/images/11.jpeg and /dev/null differ
+diff --git a/public/images/12.jpeg b/public/images/12.jpeg
+deleted file mode 100644
+index cf2af80..0000000
+Binary files a/public/images/12.jpeg and /dev/null differ
+diff --git a/public/images/13.jpeg b/public/images/13.jpeg
+deleted file mode 100644
+index 38e3182..0000000
+Binary files a/public/images/13.jpeg and /dev/null differ
+diff --git a/public/images/3.jpeg b/public/images/3.jpeg
+deleted file mode 100644
+index 44feb39..0000000
+Binary files a/public/images/3.jpeg and /dev/null differ
+diff --git a/public/images/4.jpeg b/public/images/4.jpeg
+deleted file mode 100644
+index c069f28..0000000
+Binary files a/public/images/4.jpeg and /dev/null differ
+diff --git a/public/images/5.jpeg b/public/images/5.jpeg
+deleted file mode 100644
+index e86f871..0000000
+Binary files a/public/images/5.jpeg and /dev/null differ
+diff --git a/public/images/6.jpeg b/public/images/6.jpeg
+deleted file mode 100644
+index fe3acfd..0000000
+Binary files a/public/images/6.jpeg and /dev/null differ
+diff --git a/public/images/7.jpeg b/public/images/7.jpeg
+deleted file mode 100644
+index 94ca981..0000000
+Binary files a/public/images/7.jpeg and /dev/null differ
+diff --git a/public/images/8.jpeg b/public/images/8.jpeg
+deleted file mode 100644
+index 3d354af..0000000
+Binary files a/public/images/8.jpeg and /dev/null differ
+diff --git a/public/images/9.jpeg b/public/images/9.jpeg
+deleted file mode 100644
+index 578cb67..0000000
+Binary files a/public/images/9.jpeg and /dev/null differ
+diff --git a/public/images/WhatsApp Image 2026-03-25 at 7.29.24 PM.jpeg b/public/images/WhatsApp Image 2026-03-25 at 7.29.24 PM.jpeg
+deleted file mode 100644
+index fa6d4eb..0000000
+Binary files a/public/images/WhatsApp Image 2026-03-25 at 7.29.24 PM.jpeg and /dev/null differ
+diff --git a/src/App.tsx b/src/App.tsx
+index 053b4aa..4065a53 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -5,6 +5,7 @@ import { MustHeader } from './components/MustHeader/MustHeader';
+ import { Footer } from './components/Footer';
+ import { HeroSlider } from './components/HeroSlider';
+ import { FloatingSocialBar } from './components/FloatingSocialBar';
++import { ChatPanel } from './components/Chat/ChatPanel';
+ import { LinksBar } from './components/LinksBar';
+ // Pages
+ import {Academics} from "./pages/Accademics/Academics.tsx";
+@@ -18,12 +19,14 @@ import { Settings } from './pages/Settings';
+ import { SubmitRequest } from './pages/SubmitRequest';
+ import { MyRequests } from './pages/MyRequests';
+ import { RootPage } from './pages/RootHome/RootPage';
++import { CmsPage } from './pages/CmsPage';
+ import { NotFound } from './pages/NotFound';
+ import { Login } from './pages/Login';
+ import { Register } from './pages/Register';
+ import { ProfileProvider } from './contexts/ProfileContext';
+ import { RequestsProvider } from './contexts/RequestsContext';
+ import { AuthProvider } from './context/AuthContext';
++import { ChatStoreProvider } from './context/ChatContext';
+ import { ProtectedRoute } from './components/ProtectedRoute';
+ 
+ export type PageType = 'academics' | 'questionnaires' | 'resources' | 'announcements' | 'notifications' | 'contact-us' | 'profile' | 'settings' | 'submit-request' | 'my-requests';
+@@ -62,6 +65,7 @@ function AppContent() {
+             className="min-h-[calc(100vh-140px)]">
+             <Routes>
+               <Route path="/" element={<RootPage />} />
++              <Route path="/home" element={<RootPage />} />
+               <Route path="/academics" element={<Academics />} />
+               <Route path="/questionnaires" element={<Questionnaires />} />
+               <Route path="/resources" element={<Resources />} />
+@@ -74,6 +78,7 @@ function AppContent() {
+               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+               <Route path="/submit-request" element={<SubmitRequest />} />
+   <Route path="/my-requests" element={<MyRequests />} />
++              <Route path="/:slug" element={<CmsPage />} />
+               <Route path="*" element={<NotFound />} />
+             </Routes>
+ 
+@@ -82,6 +87,7 @@ function AppContent() {
+       </main>
+       <Footer darkMode={darkMode} />
+       <FloatingSocialBar />
++      <ChatPanel />
+     </div>
+   );
+ }
+@@ -89,13 +95,15 @@ function AppContent() {
+ export function App() {
+   return (
+     <AuthProvider>
+-      <ProfileProvider>
+-        <RequestsProvider>
+-          <BrowserRouter>
+-            <AppContent />
+-          </BrowserRouter>
+-        </RequestsProvider>
+-      </ProfileProvider>
++      <ChatStoreProvider>
++        <ProfileProvider>
++          <RequestsProvider>
++            <BrowserRouter>
++              <AppContent />
++            </BrowserRouter>
++          </RequestsProvider>
++        </ProfileProvider>
++      </ChatStoreProvider>
+     </AuthProvider>
+   );
+ }
+diff --git a/src/components/Chat/ChatPanel.tsx b/src/components/Chat/ChatPanel.tsx
+new file mode 100644
+index 0000000..b73a8ec
+--- /dev/null
++++ b/src/components/Chat/ChatPanel.tsx
+@@ -0,0 +1,505 @@
++import { useEffect, useMemo, useRef, useState } from 'react';
++import { createPortal } from 'react-dom';
++import { AnimatePresence, motion } from 'framer-motion';
++import { AlertCircle, Inbox, LoaderCircle, MessageSquareText, RefreshCw, Search, Send, UserPlus, X } from 'lucide-react';
++import { useAuth } from '../../context/AuthContext';
++import { useChat } from '../../context/ChatContext';
++import type { ChatAdmin, ChatThreadMessage } from '../../services/chat';
++
++const focusableSelector = [
++  'a[href]',
++  'button:not([disabled])',
++  'textarea:not([disabled])',
++  'input:not([disabled])',
++  'select:not([disabled])',
++  '[tabindex]:not([tabindex="-1"])',
++].join(', ');
++
++const formatMessageTime = (timestamp: string) =>
++  new Date(timestamp).toLocaleTimeString([], {
++    hour: 'numeric',
++    minute: '2-digit',
++  });
++
++const sortMessages = (messages: ChatThreadMessage[]) => [...messages].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
++
++const MessageBubble = ({ message, isMine, onRetry }: { message: ChatThreadMessage; isMine: boolean; onRetry: (messageId: string) => void }) => {
++  const bubbleStyles = isMine
++    ? 'bg-secondary text-white rounded-br-md'
++    : 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white rounded-bl-md border border-slate-200 dark:border-slate-700';
++
++  return (
++    <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
++      <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${bubbleStyles}`}>
++        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">
++          <span>{isMine ? 'You' : message.sender.displayName}</span>
++          <span>|</span>
++          <span>{formatMessageTime(message.createdAt)}</span>
++        </div>
++        <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{message.text}</p>
++
++        <div className="mt-2 flex items-center justify-between gap-3 text-xs">
++          <span className={message.status === 'failed' ? 'text-rose-200' : 'opacity-70'}>
++            {message.status === 'sending' ? 'Sending...' : message.status === 'failed' ? 'Failed to send' : 'Sent'}
++          </span>
++          {message.status === 'failed' && (
++            <button
++              type="button"
++              onClick={() => onRetry(message.id)}
++              className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-inherit transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40"
++            >
++              <RefreshCw className="h-3.5 w-3.5" />
++              Retry
++            </button>
++          )}
++        </div>
++      </div>
++    </div>
++  );
++};
++
++export function ChatPanel() {
++  const panelRef = useRef<HTMLDivElement | null>(null);
++  const composerRef = useRef<HTMLTextAreaElement | null>(null);
++  const messageEndRef = useRef<HTMLDivElement | null>(null);
++  const [conversationQuery, setConversationQuery] = useState('');
++  const [adminQuery, setAdminQuery] = useState('');
++  const { user } = useAuth();
++  const {
++    isOpen,
++    conversations,
++    activeConversation,
++    activeConversationId,
++    adminDirectory,
++    messagesByConversation,
++    unreadCount,
++    isLoadingConversations,
++    isLoadingAdmins,
++    isLoadingMessages,
++    error,
++    announcement,
++    closeChat,
++    selectConversation,
++    loadAdmins,
++    startConversationWithAdmin,
++    createConversation,
++    sendMessage,
++    retryMessage,
++  } = useChat();
++
++  const activeMessages = useMemo(
++    () => sortMessages(messagesByConversation[activeConversationId ?? ''] ?? []),
++    [messagesByConversation, activeConversationId],
++  );
++
++  const filteredConversations = useMemo(() => {
++    const query = conversationQuery.trim().toLowerCase();
++
++    if (!query) {
++      return conversations;
++    }
++
++    return conversations.filter((conversation) => {
++      const titleMatch = conversation.title.toLowerCase().includes(query);
++      const participantMatch = conversation.participants.some((participant) => participant.displayName.toLowerCase().includes(query));
++      return titleMatch || participantMatch;
++    });
++  }, [conversations, conversationQuery]);
++
++  const filteredAdmins = useMemo(() => {
++    const query = adminQuery.trim().toLowerCase();
++
++    if (!query) {
++      return adminDirectory;
++    }
++
++    return adminDirectory.filter((admin) => admin.displayName.toLowerCase().includes(query));
++  }, [adminDirectory, adminQuery]);
++
++  useEffect(() => {
++    if (!isOpen) {
++      return;
++    }
++
++    const previousOverflow = document.body.style.overflow;
++    document.body.style.overflow = 'hidden';
++
++    return () => {
++      document.body.style.overflow = previousOverflow;
++    };
++  }, [isOpen]);
++
++  useEffect(() => {
++    if (!isOpen) {
++      return;
++    }
++
++    const timer = window.setTimeout(() => {
++      const focusables = panelRef.current?.querySelectorAll<HTMLElement>(focusableSelector);
++      const firstFocusable = focusables?.[0] ?? composerRef.current ?? panelRef.current;
++      firstFocusable?.focus();
++    }, 0);
++
++    return () => window.clearTimeout(timer);
++  }, [isOpen, activeConversationId]);
++
++  useEffect(() => {
++    if (!isOpen) {
++      return;
++    }
++
++    messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
++  }, [isOpen, activeConversationId, activeMessages.length]);
++
++  useEffect(() => {
++    if (!isOpen) {
++      return;
++    }
++
++    if (adminDirectory.length === 0) {
++      void loadAdmins();
++    }
++  }, [isOpen, adminDirectory.length, loadAdmins]);
++
++  if (typeof document === 'undefined' || !isOpen) {
++    return null;
++  }
++
++  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
++    if (event.key === 'Escape') {
++      event.stopPropagation();
++      closeChat();
++      return;
++    }
++
++    if (event.key !== 'Tab') {
++      return;
++    }
++
++    const focusables = panelRef.current?.querySelectorAll<HTMLElement>(focusableSelector);
++    if (!focusables || focusables.length === 0) {
++      event.preventDefault();
++      return;
++    }
++
++    const firstFocusable = focusables[0];
++    const lastFocusable = focusables[focusables.length - 1];
++    const activeElement = document.activeElement as HTMLElement | null;
++
++    if (event.shiftKey && activeElement === firstFocusable) {
++      event.preventDefault();
++      lastFocusable.focus();
++    } else if (!event.shiftKey && activeElement === lastFocusable) {
++      event.preventDefault();
++      firstFocusable.focus();
++    }
++  };
++
++  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
++    if (event.target === event.currentTarget) {
++      closeChat();
++    }
++  };
++
++  const startSupportConversation = async () => {
++    const supportAdmin = adminDirectory.find((admin) => admin.displayName.toLowerCase().includes('support')) || adminDirectory[0];
++
++    if (supportAdmin) {
++      await startConversationWithAdmin(supportAdmin);
++      return;
++    }
++
++    await createConversation({ participantIds: [1], title: 'Support' });
++  };
++
++  const openAdminConversation = async (admin: ChatAdmin) => {
++    await startConversationWithAdmin(admin);
++  };
++
++  const onComposerSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
++    event.preventDefault();
++
++    const formData = new FormData(event.currentTarget);
++    const nextMessage = String(formData.get('chat-message') ?? '').trim();
++    if (!nextMessage) {
++      return;
++    }
++
++    await sendMessage(nextMessage);
++    event.currentTarget.reset();
++  };
++
++  return createPortal(
++    <AnimatePresence>
++      <motion.div
++        className="fixed inset-0 z-[1100] bg-slate-950/45 backdrop-blur-sm"
++        initial={{ opacity: 0 }}
++        animate={{ opacity: 1 }}
++        exit={{ opacity: 0 }}
++        onMouseDown={handleOverlayClick}
++        aria-hidden="true"
++      >
++        <motion.div
++          ref={panelRef}
++          role="dialog"
++          aria-modal="true"
++          aria-label="Chat panel"
++          aria-describedby="chat-panel-description"
++          tabIndex={-1}
++          onKeyDown={handleKeyDown}
++          className="absolute right-2 top-2 flex h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-[1040px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white text-slate-900 shadow-[0_30px_120px_rgba(2,6,23,0.35)] dark:border-white/10 dark:bg-slate-950 dark:text-white sm:right-4 sm:top-4 sm:h-[calc(100vh-2rem)] lg:w-[calc(100vw-2rem)] lg:max-w-[980px]"
++          initial={{ opacity: 0, y: 24, scale: 0.98 }}
++          animate={{ opacity: 1, y: 0, scale: 1 }}
++          exit={{ opacity: 0, y: 24, scale: 0.98 }}
++          transition={{ type: 'spring', stiffness: 260, damping: 26 }}
++        >
++          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
++            <div>
++              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-secondary">Student chat</p>
++              <h2 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">Support inbox</h2>
++              <p id="chat-panel-description" className="mt-1 text-sm text-slate-600 dark:text-slate-300">
++                Conversations, messages, and replies in one place.
++              </p>
++            </div>
++            <button
++              type="button"
++              onClick={closeChat}
++              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-secondary/40 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800"
++              aria-label="Close chat panel"
++            >
++              <X className="h-5 w-5" />
++            </button>
++          </div>
++
++          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
++            <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/40 lg:w-[320px] lg:border-b-0 lg:border-r">
++              <div className="flex items-center justify-between px-4 py-3 sm:px-6">
++                <div>
++                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Conversations</p>
++                  <p className="text-xs text-slate-500 dark:text-slate-400">Unread {unreadCount}</p>
++                </div>
++                <button
++                  type="button"
++                  onClick={() => void startSupportConversation()}
++                  className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-2 text-xs font-semibold text-white transition hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-secondary/40"
++                >
++                  <MessageSquareText className="h-3.5 w-3.5" />
++                  New chat
++                </button>
++              </div>
++
++              <div className="px-4 pb-3 sm:px-6">
++                <label className="sr-only" htmlFor="conversation-search">Search conversations</label>
++                <div className="relative">
++                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
++                  <input
++                    id="conversation-search"
++                    value={conversationQuery}
++                    onChange={(event) => setConversationQuery(event.target.value)}
++                    placeholder="Search by admin or chat title"
++                    className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
++                  />
++                </div>
++              </div>
++
++              <div className="px-4 pb-3 sm:px-6">
++                <label className="sr-only" htmlFor="admin-search">Search admins</label>
++                <div className="relative">
++                  <UserPlus className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
++                  <input
++                    id="admin-search"
++                    value={adminQuery}
++                    onChange={(event) => setAdminQuery(event.target.value)}
++                    placeholder="Find admin from dashboard users"
++                    className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
++                  />
++                </div>
++                <div className="mt-2 max-h-28 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
++                  {isLoadingAdmins ? (
++                    <div className="flex items-center justify-center py-3 text-slate-500 dark:text-slate-400">
++                      <LoaderCircle className="h-4 w-4 animate-spin" />
++                    </div>
++                  ) : filteredAdmins.length === 0 ? (
++                    <p className="px-2 py-1 text-xs text-slate-500 dark:text-slate-400">No admins found.</p>
++                  ) : (
++                    <ul className="space-y-1">
++                      {filteredAdmins.map((admin) => (
++                        <li key={admin.id}>
++                          <button
++                            type="button"
++                            onClick={() => void openAdminConversation(admin)}
++                            className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
++                          >
++                            <span className="truncate">{admin.displayName}</span>
++                            <span className="text-[11px] font-semibold uppercase tracking-wide text-secondary">Chat</span>
++                          </button>
++                        </li>
++                      ))}
++                    </ul>
++                  )}
++                </div>
++              </div>
++
++              <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4 sm:px-4">
++                {isLoadingConversations ? (
++                  <div className="flex h-48 items-center justify-center text-slate-500 dark:text-slate-400">
++                    <LoaderCircle className="h-5 w-5 animate-spin" />
++                  </div>
++                ) : filteredConversations.length === 0 ? (
++                  <div className="mx-2 mt-3 rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300">
++                    <Inbox className="h-6 w-6 text-secondary" />
++                    <p className="mt-3 font-semibold text-slate-900 dark:text-white">No conversations found</p>
++                    <p className="mt-2 leading-6">Try another name or start a new chat with an admin from the list above.</p>
++                    <button
++                      type="button"
++                      onClick={() => void startSupportConversation()}
++                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-semibold text-white transition hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-secondary/40"
++                    >
++                      Create support chat
++                    </button>
++                  </div>
++                ) : (
++                  <ul className="space-y-2">
++                    {filteredConversations.map((conversation) => {
++                      const isActive = conversation.id === activeConversationId;
++                      return (
++                        <li key={conversation.id}>
++                          <button
++                            type="button"
++                            onClick={() => void selectConversation(conversation.id)}
++                            className={`w-full rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-secondary/40 ${
++                              isActive
++                                ? 'border-secondary bg-secondary/10 shadow-sm'
++                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-slate-700 dark:hover:bg-slate-900/80'
++                            }`}
++                          >
++                            <div className="flex items-start justify-between gap-3">
++                              <div className="min-w-0">
++                                <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{conversation.title}</p>
++                                <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
++                                  {conversation.lastMessage?.text ?? 'No messages yet'}
++                                </p>
++                              </div>
++                              {conversation.unreadCount > 0 && (
++                                <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-secondary px-2 py-1 text-[11px] font-bold text-white">
++                                  {conversation.unreadCount}
++                                </span>
++                              )}
++                            </div>
++                          </button>
++                        </li>
++                      );
++                    })}
++                  </ul>
++                )}
++              </div>
++            </aside>
++
++            <section className="flex min-h-0 flex-1 flex-col bg-white dark:bg-slate-950">
++              {error && (
++                <div className="mx-4 mt-4 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/60 dark:text-rose-200 sm:mx-6">
++                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
++                  <p>{error}</p>
++                </div>
++              )}
++
++              {!activeConversation ? (
++                <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 text-center text-slate-500 dark:text-slate-400">
++                  <Inbox className="h-10 w-10 text-secondary" />
++                  <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">Pick a conversation</h3>
++                  <p className="mt-2 max-w-md text-sm leading-6">
++                    Choose an existing thread or create a new support chat to start messaging.
++                  </p>
++                </div>
++              ) : (
++                <>
++                  <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800 sm:px-6">
++                    <div>
++                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-secondary">Conversation</p>
++                      <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{activeConversation.title}</h3>
++                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
++                        {activeConversation.participants.map((participant) => participant.displayName).join(' | ')}
++                      </p>
++                    </div>
++                    <button
++                      type="button"
++                      onClick={() => void selectConversation(activeConversation.id)}
++                      className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-secondary/40 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-900"
++                    >
++                      Refresh thread
++                    </button>
++                  </div>
++
++                  <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
++                    {isLoadingMessages ? (
++                      <div className="flex h-full items-center justify-center text-slate-500 dark:text-slate-400">
++                        <LoaderCircle className="h-5 w-5 animate-spin" />
++                      </div>
++                    ) : activeMessages.length === 0 ? (
++                      <div className="flex h-full items-center justify-center text-center text-slate-500 dark:text-slate-400">
++                        <div>
++                          <MessageSquareText className="mx-auto h-10 w-10 text-secondary" />
++                          <p className="mt-4 text-sm font-medium text-slate-900 dark:text-white">No messages yet</p>
++                          <p className="mt-2 text-sm leading-6">Send the first message to start the thread.</p>
++                        </div>
++                      </div>
++                    ) : (
++                      <div className="space-y-3">
++                        {activeMessages.map((message) => (
++                          <MessageBubble
++                            key={message.id}
++                            message={message}
++                            isMine={message.sender.id === user?.id}
++                            onRetry={(messageId) => void retryMessage(messageId)}
++                          />
++                        ))}
++                        <div ref={messageEndRef} />
++                      </div>
++                    )}
++                  </div>
++
++                  <div className="border-t border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/60 sm:px-6">
++                    <form onSubmit={onComposerSubmit} className="flex items-end gap-3">
++                      <label className="sr-only" htmlFor="chat-message">
++                        Message composer
++                      </label>
++                      <textarea
++                        id="chat-message"
++                        name="chat-message"
++                        ref={composerRef}
++                        rows={2}
++                        placeholder="Write a message..."
++                        aria-label="Write a message"
++                        className="min-h-[52px] flex-1 resize-none rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500"
++                        onKeyDown={(event) => {
++                          if (event.key === 'Enter' && !event.shiftKey) {
++                            event.preventDefault();
++                            const form = event.currentTarget.form;
++                            form?.requestSubmit();
++                          }
++                        }}
++                      />
++                      <button
++                        type="submit"
++                        className="inline-flex h-12 items-center gap-2 rounded-2xl bg-secondary px-4 text-sm font-semibold text-white transition hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-secondary/40 disabled:cursor-not-allowed disabled:opacity-60"
++                      >
++                        <Send className="h-4 w-4" />
++                        Send
++                      </button>
++                    </form>
++                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Press Enter to send, Shift+Enter for a new line.</p>
++                  </div>
++                </>
++              )}
++            </section>
++          </div>
++
++          <div aria-live="polite" aria-atomic="true" className="sr-only">
++            {announcement}
++          </div>
++        </motion.div>
++      </motion.div>
++    </AnimatePresence>,
++    document.body,
++  );
++}
+diff --git a/src/components/CmsSingleTypePage.tsx b/src/components/CmsSingleTypePage.tsx
+index 0f1038e..4c6b786 100644
+--- a/src/components/CmsSingleTypePage.tsx
++++ b/src/components/CmsSingleTypePage.tsx
+@@ -2,6 +2,8 @@ import { AlertCircle, Loader } from 'lucide-react';
+ import { ContentBlocks } from './ContentBlocks';
+ import { useCmsData } from '../hooks/useCmsData';
+ import { ContentBlock } from '../types/strapi';
++import { useEffect } from 'react';
++import { useLocation } from 'react-router-dom';
+ 
+ interface CmsSingleTypePageData {
+   id?: number;
+@@ -22,6 +24,32 @@ export function CmsSingleTypePage<T extends CmsSingleTypePageData>({
+   fallbackSubtitle,
+ }: CmsSingleTypePageProps<T>) {
+   const { data, loading, error } = useCmsData(fetcher, []);
++  const location = useLocation();
++
++  useEffect(() => {
++    if (loading || !data || !location.hash) {
++      return;
++    }
++
++    const anchor = decodeURIComponent(location.hash.replace(/^#/, ''));
++
++    if (!anchor) {
++      return;
++    }
++
++    const scrollToAnchor = () => {
++      const element = document.getElementById(anchor);
++      if (element) {
++        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
++      }
++    };
++
++    const frame = window.requestAnimationFrame(() => {
++      window.requestAnimationFrame(scrollToAnchor);
++    });
++
++    return () => window.cancelAnimationFrame(frame);
++  }, [data, loading, location.hash]);
+ 
+   if (loading) {
+     return (
+diff --git a/src/components/ContentBlocks.tsx b/src/components/ContentBlocks.tsx
+index e0f82c8..5e74709 100644
+--- a/src/components/ContentBlocks.tsx
++++ b/src/components/ContentBlocks.tsx
+@@ -19,7 +19,9 @@ export function ContentBlocks({ blocks }: ContentBlocksProps) {
+   return (
+     <div className="space-y-6">
+       {blocks.map((block, idx) => (
+-        <ContentBlock key={idx} block={block} />
++        <section key={idx} id={block.anchor || undefined} className="scroll-mt-28">
++          <ContentBlock block={block} />
++        </section>
+       ))}
+     </div>
+   );
+@@ -32,10 +34,19 @@ interface ContentBlockProps {
+ function ContentBlock({ block }: ContentBlockProps) {
+   const safeContent = block.type === 'rich-text' ? sanitizeHtml(block.content) : '';
+   const looksLikeHtml = block.type === 'rich-text' ? /<\/?[a-z][\s\S]*>/i.test(safeContent) : false;
++  const renderHeading = (Tag: 'h1' | 'h2' | 'h3', className: string) => {
++    return ({ children, ...props }: any) => {
++      const text = getTextContent(children);
++      const id = text ? slugify(text) : undefined;
++
++      return <Tag id={id} className={className} {...props}>{children}</Tag>;
++    };
++  };
++
+   const markdownComponents = {
+-    h1: (props: any) => <h1 className="text-3xl md:text-4xl font-bold mt-8 mb-4 text-gray-900 dark:text-white" {...props} />,
+-    h2: (props: any) => <h2 className="text-2xl md:text-3xl font-bold mt-7 mb-3 text-gray-900 dark:text-white" {...props} />,
+-    h3: (props: any) => <h3 className="text-xl md:text-2xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white" {...props} />,
++    h1: renderHeading('h1', 'text-3xl md:text-4xl font-bold mt-8 mb-4 text-gray-900 dark:text-white scroll-mt-28'),
++    h2: renderHeading('h2', 'text-2xl md:text-3xl font-bold mt-7 mb-3 text-gray-900 dark:text-white scroll-mt-28'),
++    h3: renderHeading('h3', 'text-xl md:text-2xl font-semibold mt-6 mb-3 text-gray-900 dark:text-white scroll-mt-28'),
+     p: (props: any) => <p className="text-base md:text-lg leading-8 mb-4 text-gray-800 dark:text-gray-200" {...props} />,
+     ul: (props: any) => <ul className="list-disc pl-6 mb-4 space-y-2 text-base md:text-lg text-gray-800 dark:text-gray-200" {...props} />,
+     ol: (props: any) => <ol className="list-decimal pl-6 mb-4 space-y-2 text-base md:text-lg text-gray-800 dark:text-gray-200" {...props} />,
+@@ -146,3 +157,28 @@ function sanitizeHtml(html: string): string {
+   return sanitized;
+ }
+ 
++function getTextContent(node: any): string {
++  if (typeof node === 'string' || typeof node === 'number') {
++    return String(node);
++  }
++
++  if (Array.isArray(node)) {
++    return node.map(getTextContent).join(' ');
++  }
++
++  if (node && typeof node === 'object' && 'props' in node) {
++    return getTextContent((node as any).props?.children);
++  }
++
++  return '';
++}
++
++function slugify(value: string): string {
++  return value
++    .toLowerCase()
++    .trim()
++    .replace(/['"]/g, '')
++    .replace(/[^a-z0-9]+/g, '-')
++    .replace(/^-+|-+$/g, '');
++}
++
+diff --git a/src/components/FloatingSocialBar.tsx b/src/components/FloatingSocialBar.tsx
+index b2836d2..be296cc 100644
+--- a/src/components/FloatingSocialBar.tsx
++++ b/src/components/FloatingSocialBar.tsx
+@@ -1,4 +1,13 @@
++import { MessageCircle } from 'lucide-react';
++import { useRef } from 'react';
++import { useAuth } from '../context/AuthContext';
++import { useChat } from '../context/ChatContext';
++
+ export function FloatingSocialBar() {
++  const buttonRef = useRef<HTMLButtonElement | null>(null);
++  const { user } = useAuth();
++  const { toggleChat, unreadCount } = useChat();
++
+ // Social links to match Angular reference global-social-sidebar
+ const socialLinks = [
+   { icon: 'fab fa-linkedin-in', href: 'https://eg.linkedin.com/school/misr-university-for-science-and-technology/', label: 'LinkedIn', color: '#1f3769' },
+@@ -28,6 +37,23 @@ const socialLinks = [
+           <i className={`${icon} text-lg md:text-xl transition-transform duration-200 group-hover:scale-110`}></i>
+         </a>
+       ))}
++
++      {user && (
++        <button
++          ref={buttonRef}
++          type="button"
++          onClick={() => toggleChat(buttonRef.current)}
++          className="relative w-10 h-10 md:w-12 md:h-12 rounded-full border border-gray-200 flex items-center justify-center bg-[#1f3769] text-white shadow-md hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out"
++          aria-label="Open chat"
++        >
++          <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
++          {unreadCount > 0 && (
++            <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-red-600 text-white text-[10px] leading-[1.1rem] font-bold text-center">
++              {unreadCount > 99 ? '99+' : unreadCount}
++            </span>
++          )}
++        </button>
++      )}
+     </div>
+   );
+ }
+\ No newline at end of file
+diff --git a/src/components/HeroSlider.tsx b/src/components/HeroSlider.tsx
+index bb42afe..f200184 100644
+--- a/src/components/HeroSlider.tsx
++++ b/src/components/HeroSlider.tsx
+@@ -5,22 +5,6 @@ import { Link } from 'react-router-dom';
+ import { apiRequest, getCurrentApiBaseUrl } from '../services/api';
+ import { useAuth } from '../context/AuthContext';
+ 
+-const fallbackImages = [
+-  '/images/1.jpeg',
+-  '/images/3.jpeg',
+-  '/images/4.jpeg',
+-  '/images/5.jpeg',
+-  '/images/6.jpeg',
+-  '/images/7.jpeg',
+-  '/images/8.jpeg',
+-  '/images/9.jpeg',
+-  '/images/10.jpeg',
+-  '/images/11.jpeg',
+-  '/images/12.jpeg',
+-  '/images/13.jpeg',
+-  '/images/WhatsApp Image 2026-03-25 at 7.29.24 PM.jpeg'
+-];
+-
+ type SliderImage = {
+   id: number | string;
+   src: string;
+@@ -55,7 +39,7 @@ type HeroNavTreeApiItem = {
+   title?: string;
+   url?: string;
+   target?: HeroNavTarget;
+-  isProtected?: boolean;
++  accessRole?: 'public' | 'visitor' | 'college-member';
+   children?: HeroNavTreeApiItem[];
+ };
+ 
+@@ -63,15 +47,11 @@ type HeroNavTreeItem = {
+   title: string;
+   url: string;
+   target: HeroNavTarget;
+-  isProtected: boolean;
++  accessRole: 'public' | 'visitor' | 'college-member';
+   children: HeroNavTreeItem[];
+ };
+ 
+-const fallbackSlides: SliderImage[] = fallbackImages.map((src, index) => ({
+-  id: `fallback-${index}`,
+-  src,
+-  title: `Slide ${index + 1}`,
+-}));
++type MenuAccessRole = 'public' | 'visitor' | 'college-member';
+ 
+ const getStrapiBaseUrl = () => {
+   const base = getCurrentApiBaseUrl().trim();
+@@ -96,15 +76,6 @@ const toAbsoluteUrl = (url: string, baseUrl: string) => {
+   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+ };
+ 
+-const fallbackHeroNavTree: HeroNavTreeItem[] = [
+-  { title: 'Home', url: '/', target: '_self', isProtected: false, children: [] },
+-  { title: 'Academics', url: '/academics', target: '_self', isProtected: false, children: [] },
+-  { title: 'Questionnaires', url: '/questionnaires', target: '_self', isProtected: false, children: [] },
+-  { title: 'Resources', url: '/resources', target: '_self', isProtected: false, children: [] },
+-  { title: 'Announcements', url: '/announcements', target: '_self', isProtected: false, children: [] },
+-  { title: 'Contact Us', url: '/contact-us', target: '_self', isProtected: false, children: [] },
+-];
+-
+ const normalizeNavPath = (url: string) => {
+   const trimmed = url.trim();
+   if (!trimmed) {
+@@ -201,24 +172,44 @@ const normalizeHeroNavTree = (items: HeroNavTreeApiItem[]): HeroNavTreeItem[] =>
+       }
+ 
+       const target: HeroNavTarget = item.target === '_blank' ? '_blank' : '_self';
++      const accessRole: MenuAccessRole =
++        item.accessRole === 'visitor' || item.accessRole === 'college-member'
++          ? item.accessRole
++          : 'public';
+ 
+       return {
+         title,
+         url: target === '_self' ? normalizeNavPath(rawUrl) : rawUrl,
+         target,
+-        isProtected: Boolean(item.isProtected),
++        accessRole,
+         children: normalizeHeroNavTree(Array.isArray(item.children) ? item.children : []),
+       };
+     })
+     .filter((item): item is HeroNavTreeItem => item !== null);
+ };
+ 
+-const filterProtectedHeroNavTree = (items: HeroNavTreeItem[], isLoggedIn: boolean): HeroNavTreeItem[] => {
++const isMenuItemVisibleForRole = (accessRole: MenuAccessRole, userRole?: string | null): boolean => {
++  if (accessRole === 'public') {
++    return true;
++  }
++
++  if (userRole === 'admin') {
++    return true;
++  }
++
++  if (accessRole === 'visitor') {
++    return userRole === 'visitor' || userRole === 'college-member';
++  }
++
++  return userRole === 'college-member';
++};
++
++const filterVisibleHeroNavTree = (items: HeroNavTreeItem[], userRole?: string | null): HeroNavTreeItem[] => {
+   return items
+-    .filter((item) => isLoggedIn || !item.isProtected)
++    .filter((item) => isMenuItemVisibleForRole(item.accessRole, userRole))
+     .map((item) => ({
+       ...item,
+-      children: filterProtectedHeroNavTree(item.children, isLoggedIn),
++      children: filterVisibleHeroNavTree(item.children, userRole),
+     }));
+ };
+ 
+@@ -291,8 +282,8 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }:
+ export function HeroSlider() {
+   const [currentIndex, setCurrentIndex] = useState(0);
+   const [isAutoPlay, setIsAutoPlay] = useState(true);
+-  const [slides, setSlides] = useState<SliderImage[]>(fallbackSlides);
+-  const [heroNavTree, setHeroNavTree] = useState<HeroNavTreeItem[]>(fallbackHeroNavTree);
++  const [slides, setSlides] = useState<SliderImage[]>([]);
++  const [heroNavTree, setHeroNavTree] = useState<HeroNavTreeItem[]>([]);
+   const [activeHeroNavPath, setActiveHeroNavPath] = useState<string[]>([]);
+   const [isLoading, setIsLoading] = useState(true);
+   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
+@@ -326,14 +317,10 @@ export function HeroSlider() {
+           })
+           .filter((item): item is SliderImage => item !== null);
+ 
+-        if (mappedSlides.length > 0) {
+-          setSlides(mappedSlides);
+-          setCurrentIndex(0);
+-        } else {
+-          setSlides(fallbackSlides);
+-        }
++        setSlides(mappedSlides);
++        setCurrentIndex(0);
+       } catch {
+-        setSlides(fallbackSlides);
++        setSlides([]);
+       } finally {
+         setIsLoading(false);
+       }
+@@ -353,13 +340,9 @@ export function HeroSlider() {
+         const rawHeroNavTree = parseHeroNavTree(payload);
+         const normalizedHeroNavTree = normalizeHeroNavTree(rawHeroNavTree);
+ 
+-        if (normalizedHeroNavTree.length > 0) {
+-          setHeroNavTree(normalizedHeroNavTree);
+-        } else {
+-          setHeroNavTree(fallbackHeroNavTree);
+-        }
++        setHeroNavTree(normalizedHeroNavTree);
+       } catch {
+-        setHeroNavTree(fallbackHeroNavTree);
++        setHeroNavTree([]);
+       }
+     };
+ 
+@@ -382,7 +365,7 @@ export function HeroSlider() {
+     }, 200);
+   };
+ 
+-  const visibleHeroNavTree = filterProtectedHeroNavTree(heroNavTree, Boolean(user));
++  const visibleHeroNavTree = filterVisibleHeroNavTree(heroNavTree, user?.role?.type ?? null);
+ 
+   useEffect(() => {
+     setLoadedImages({});
+diff --git a/src/components/MustHeader/MustHeader.tsx b/src/components/MustHeader/MustHeader.tsx
+index d1a17b2..7b11e7a 100644
+--- a/src/components/MustHeader/MustHeader.tsx
++++ b/src/components/MustHeader/MustHeader.tsx
+@@ -19,7 +19,7 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
+   const [mobileActiveSubItem, setMobileActiveSubItem] = useState<MenuItem | null>(null);
+ 
+   const location = useLocation();
+-  const { user, logout, isAdmin } = useAuth();
++  const { user, logout } = useAuth();
+   const strapiAdminUrl = import.meta.env.VITE_STRAPI_URL
+     ? `${import.meta.env.VITE_STRAPI_URL.replace(/\/$/, '')}/admin`
+     : '#';
+@@ -260,6 +260,17 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
+               <i className={`fas ${!darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+             </button>
+ 
++            <a
++              href={strapiAdminUrl}
++              target="_blank"
++              rel="noopener noreferrer"
++              className="btn-auth login-btn ms-2"
++              style={{ textDecoration: 'none' }}
++            >
++              <i className="fas fa-gauge-high"></i>
++              <span>Dashboard</span>
++            </a>
++
+             {!user ? (
+               <>
+                 <Link to="/login" className="btn-auth login-btn ms-2" style={{ textDecoration: 'none' }}>
+@@ -273,18 +284,6 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
+               </>
+             ) : (
+               <>
+-                {isAdmin && (
+-                  <a
+-                    href={strapiAdminUrl}
+-                    target="_blank"
+-                    rel="noopener noreferrer"
+-                    className="btn-auth login-btn ms-2"
+-                    style={{ textDecoration: 'none' }}
+-                  >
+-                    <i className="fas fa-gauge-high"></i>
+-                    <span>Dashboard</span>
+-                  </a>
+-                )}
+                 <Link to="/profile" className="btn-auth login-btn ms-2" style={{ textDecoration: 'none' }}>
+                   <i className="fas fa-user"></i>
+                   <span>{user.displayName || user.username}</span>
+@@ -411,6 +410,9 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
+           </ul>
+ 
+           <div style={{ borderTop: '1px solid #2d4278', marginTop: '12px', paddingTop: '12px' }}>
++            <a href={strapiAdminUrl} target="_blank" rel="noopener noreferrer" className="mobile-nav-link" onClick={closeMenus}>
++              Dashboard
++            </a>
+             {!user ? (
+               <div style={{ display: 'flex', gap: '8px' }}>
+                 <Link to="/login" className="mobile-nav-link" onClick={closeMenus}>Login</Link>
+@@ -421,11 +423,6 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
+                 <Link to="/profile" className="mobile-nav-link" onClick={closeMenus}>
+                   {user.displayName || user.username}
+                 </Link>
+-                {isAdmin && (
+-                  <a href={strapiAdminUrl} target="_blank" rel="noopener noreferrer" className="mobile-nav-link" onClick={closeMenus}>
+-                    Dashboard
+-                  </a>
+-                )}
+                 <button className="mobile-nav-link" onClick={handleLogout} style={{ textAlign: 'left', background: 'transparent', border: 'none' }}>
+                   Logout
+                 </button>
+diff --git a/src/context/AuthContext.tsx b/src/context/AuthContext.tsx
+index cec1c13..0d52fac 100644
+--- a/src/context/AuthContext.tsx
++++ b/src/context/AuthContext.tsx
+@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
+       login,
+       register,
+       logout,
+-      isAdmin: user?.userType === 'admin' || user?.role?.type === 'admin',
++      isAdmin: user?.role?.type === ROLES.ADMIN,
+       isCollegeMember: user?.role?.type === 'college-member',
+       refreshUser,
+     }),
+diff --git a/src/context/ChatContext.tsx b/src/context/ChatContext.tsx
+new file mode 100644
+index 0000000..707d643
+--- /dev/null
++++ b/src/context/ChatContext.tsx
+@@ -0,0 +1,516 @@
++import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
++import { useAuth } from './AuthContext';
++import { createChatProvider, type ChatAdmin, type ChatConversation, type ChatCreateConversationPayload, type ChatMessage, type ChatProviderCurrentUser, type ChatThreadMessage } from '../services/chat';
++
++interface ChatContextValue {
++  isOpen: boolean;
++  conversations: ChatConversation[];
++  activeConversationId: string | null;
++  activeConversation: ChatConversation | null;
++  adminDirectory: ChatAdmin[];
++  messagesByConversation: Record<string, ChatThreadMessage[]>;
++  unreadCount: number;
++  isLoadingConversations: boolean;
++  isLoadingAdmins: boolean;
++  isLoadingMessages: boolean;
++  error: string | null;
++  announcement: string;
++  openChat: (triggerElement?: HTMLElement | null) => void;
++  closeChat: () => void;
++  toggleChat: (triggerElement?: HTMLElement | null) => void;
++  selectConversation: (conversationId: string) => Promise<void>;
++  loadAdmins: (query?: string) => Promise<void>;
++  startConversationWithAdmin: (admin: ChatAdmin) => Promise<void>;
++  refreshConversations: () => Promise<void>;
++  createConversation: (payload: ChatCreateConversationPayload) => Promise<void>;
++  loadMoreMessages: (conversationId: string) => Promise<void>;
++  sendMessage: (text: string) => Promise<void>;
++  retryMessage: (messageId: string) => Promise<void>;
++}
++
++const ChatContext = createContext<ChatContextValue | undefined>(undefined);
++
++const currentUserParticipant = (user: ReturnType<typeof useAuth>['user']) => ({
++  id: user?.id ?? 0,
++  displayName: user?.displayName || user?.username || 'You',
++  avatarUrl: user?.avatar?.url ?? null,
++});
++
++const generateClientMessageId = () => {
++  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
++    return crypto.randomUUID();
++  }
++
++  return `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
++};
++
++const updateConversationPreview = (
++  conversations: ChatConversation[],
++  conversationId: string,
++  lastMessage: ChatConversation['lastMessage'],
++  unreadCount = 0,
++  updatedAt = new Date().toISOString(),
++  title?: string,
++  participants: ChatConversation['participants'] = [],
++) => {
++  const updatedConversations = conversations.map((conversation) => {
++    if (conversation.id !== conversationId) {
++      return conversation;
++    }
++
++    return {
++      ...conversation,
++      lastMessage,
++      unreadCount,
++      updatedAt,
++    };
++  });
++
++  if (!updatedConversations.some((conversation) => conversation.id === conversationId)) {
++    updatedConversations.push({
++      id: conversationId,
++      title: title ?? 'Support',
++      participants,
++      lastMessage,
++      unreadCount,
++      updatedAt,
++    });
++  }
++
++  return updatedConversations.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
++};
++
++const replaceMessage = (
++  messages: ChatThreadMessage[],
++  messageId: string,
++  nextMessage: ChatThreadMessage,
++) => messages.map((message) => (message.id === messageId ? nextMessage : message));
++
++const appendUniqueMessages = (currentMessages: ChatThreadMessage[], nextMessages: ChatMessage[]) => {
++  const existingIds = new Set(currentMessages.map((message) => message.id));
++  const mergedMessages = [...currentMessages];
++
++  nextMessages.forEach((message) => {
++    if (!existingIds.has(message.id)) {
++      mergedMessages.push(message);
++    }
++  });
++
++  return mergedMessages;
++};
++
++export function ChatStoreProvider({ children }: { children: React.ReactNode }) {
++  const { user, token, isLoading: isAuthLoading } = useAuth();
++  const previousUserIdRef = useRef<number | null>(null);
++  const lastReadMessageRef = useRef<Record<string, string | undefined>>({});
++  const returnFocusRef = useRef<HTMLElement | null>(null);
++
++  const [isOpen, setIsOpen] = useState(false);
++  const [conversations, setConversations] = useState<ChatConversation[]>([]);
++  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
++  const [adminDirectory, setAdminDirectory] = useState<ChatAdmin[]>([]);
++  const [messagesByConversation, setMessagesByConversation] = useState<Record<string, ChatThreadMessage[]>>({});
++  const [nextCursorByConversation, setNextCursorByConversation] = useState<Record<string, string | null>>({});
++  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
++  const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
++  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++  const [announcement, setAnnouncement] = useState('Chat ready.');
++  const currentUser = currentUserParticipant(user);
++
++  const provider = useMemo(() => {
++    const createdProvider = createChatProvider(currentUser as ChatProviderCurrentUser);
++    return createdProvider;
++  }, [currentUser.id, currentUser.displayName, currentUser.avatarUrl]);
++
++  const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
++  const unreadCount = conversations.reduce((total, conversation) => total + conversation.unreadCount, 0);
++
++  const resetChatState = () => {
++    setIsOpen(false);
++    setConversations([]);
++    setActiveConversationId(null);
++    setAdminDirectory([]);
++    setMessagesByConversation({});
++    setNextCursorByConversation({});
++    setIsLoadingConversations(false);
++    setIsLoadingMessages(false);
++    setError(null);
++    setAnnouncement('Chat ready.');
++    lastReadMessageRef.current = {};
++  };
++
++  const focusReturnTarget = () => {
++    const target = returnFocusRef.current;
++    returnFocusRef.current = null;
++    target?.focus();
++  };
++
++  const refreshConversations = useCallback(async () => {
++    if (!user || isAuthLoading) {
++      return;
++    }
++
++    setIsLoadingConversations(true);
++    setError(null);
++
++    try {
++      const response = await provider.listConversations(1, 20);
++      const nextConversations = response.data;
++      setConversations(nextConversations);
++
++      setActiveConversationId((currentActiveConversationId) => {
++        if (currentActiveConversationId && nextConversations.some((conversation) => conversation.id === currentActiveConversationId)) {
++          return currentActiveConversationId;
++        }
++
++        return nextConversations[0]?.id ?? null;
++      });
++
++      if (nextConversations.length === 0) {
++        setAnnouncement('No conversations yet. Start a new support chat when you need help.');
++      }
++    } catch (refreshError) {
++      const message = refreshError instanceof Error ? refreshError.message : 'Failed to load conversations.';
++      setError(message);
++      setAnnouncement(message);
++    } finally {
++      setIsLoadingConversations(false);
++    }
++  }, [user, isAuthLoading, provider]);
++
++  const loadAdmins = useCallback(async (query?: string) => {
++    if (!user || isAuthLoading) {
++      return;
++    }
++
++    setIsLoadingAdmins(true);
++
++    try {
++      const response = await provider.listAdmins(query);
++      setAdminDirectory(response.data || []);
++    } catch (loadAdminsError) {
++      const message = loadAdminsError instanceof Error ? loadAdminsError.message : 'Failed to load admins.';
++      setError(message);
++      setAnnouncement(message);
++    } finally {
++      setIsLoadingAdmins(false);
++    }
++  }, [user, isAuthLoading, provider]);
++
++  const loadMessages = useCallback(async (conversationId: string, reset = true) => {
++    if (!conversationId || !user || isAuthLoading) {
++      return;
++    }
++
++    setIsLoadingMessages(true);
++    setError(null);
++
++    try {
++      const cursor = reset ? null : nextCursorByConversation[conversationId] ?? null;
++      const response = await provider.listMessages(conversationId, cursor, 30);
++
++      setMessagesByConversation((currentMessages) => {
++        const existingMessages = reset ? [] : currentMessages[conversationId] ?? [];
++        const normalizedMessages = response.data.map((message) => ({
++          ...message,
++          status: message.status,
++        }));
++
++        return {
++          ...currentMessages,
++          [conversationId]: reset
++            ? normalizedMessages
++            : appendUniqueMessages(existingMessages, normalizedMessages),
++        };
++      });
++
++      setNextCursorByConversation((currentCursors) => ({
++        ...currentCursors,
++        [conversationId]: response.meta.nextCursor,
++      }));
++    } catch (loadError) {
++      const message = loadError instanceof Error ? loadError.message : 'Failed to load messages.';
++      setError(message);
++      setAnnouncement(message);
++    } finally {
++      setIsLoadingMessages(false);
++    }
++  }, [user, isAuthLoading, provider, nextCursorByConversation]);
++
++  const openChat = (triggerElement?: HTMLElement | null) => {
++    returnFocusRef.current = triggerElement ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
++    setIsOpen(true);
++    setError(null);
++    setAnnouncement('Chat panel opened.');
++
++    if (conversations.length === 0) {
++      void refreshConversations();
++    }
++
++    if (adminDirectory.length === 0) {
++      void loadAdmins();
++    }
++  };
++
++  const closeChat = () => {
++    setIsOpen(false);
++    setAnnouncement('Chat panel closed.');
++    focusReturnTarget();
++  };
++
++  const toggleChat = (triggerElement?: HTMLElement | null) => {
++    if (isOpen) {
++      closeChat();
++      return;
++    }
++
++    openChat(triggerElement);
++  };
++
++  const selectConversation = async (conversationId: string) => {
++    setActiveConversationId(conversationId);
++
++    if (!messagesByConversation[conversationId]) {
++      await loadMessages(conversationId, true);
++    }
++  };
++
++  const createConversation = async (payload: ChatCreateConversationPayload) => {
++    setError(null);
++    try {
++      const response = await provider.createConversation(payload);
++      const createdConversation = response.data;
++
++      setConversations((currentConversations) =>
++        updateConversationPreview(
++          currentConversations,
++          createdConversation.id,
++          createdConversation.lastMessage ?? null,
++          createdConversation.unreadCount,
++          createdConversation.updatedAt,
++          createdConversation.title,
++          createdConversation.participants,
++        ),
++      );
++      setActiveConversationId(createdConversation.id);
++      void loadMessages(createdConversation.id, true);
++      setAnnouncement(`Conversation ${createdConversation.title} created.`);
++    } catch (createError) {
++      const message = createError instanceof Error ? createError.message : 'Failed to create conversation.';
++      setError(message);
++      setAnnouncement(message);
++      throw createError instanceof Error ? createError : new Error(message);
++    }
++  };
++
++  const startConversationWithAdmin = useCallback(async (admin: ChatAdmin) => {
++    const existingConversation = conversations.find((conversation) =>
++      conversation.participants.some((participant) => participant.id === admin.id),
++    );
++
++    if (existingConversation) {
++      await selectConversation(existingConversation.id);
++      return;
++    }
++
++    await createConversation({
++      participantIds: [admin.id],
++      title: `Chat with ${admin.displayName}`,
++    });
++  }, [conversations]);
++
++  const sendMessage = async (text: string) => {
++    const trimmedText = text.trim();
++    if (!trimmedText || !activeConversationId || !user) {
++      return;
++    }
++
++    const clientMessageId = generateClientMessageId();
++    const sender = currentUserParticipant(user);
++    const optimisticMessage: ChatThreadMessage = {
++      id: clientMessageId,
++      conversationId: activeConversationId,
++      text: trimmedText,
++      sender,
++      status: 'sending',
++      createdAt: new Date().toISOString(),
++      clientMessageId,
++    };
++
++    setMessagesByConversation((currentMessages) => ({
++      ...currentMessages,
++      [activeConversationId]: [...(currentMessages[activeConversationId] ?? []), optimisticMessage],
++    }));
++    setAnnouncement(`Sending message: ${trimmedText}`);
++
++    try {
++      const response = await provider.sendMessage(activeConversationId, {
++        text: trimmedText,
++        clientMessageId,
++      });
++
++      const sentMessage = response.data;
++      setMessagesByConversation((currentMessages) => ({
++        ...currentMessages,
++        [activeConversationId]: replaceMessage(currentMessages[activeConversationId] ?? [], clientMessageId, {
++          ...sentMessage,
++          status: 'sent',
++        }),
++      }));
++
++      setConversations((currentConversations) =>
++        updateConversationPreview(
++          currentConversations,
++          activeConversationId,
++          {
++            id: sentMessage.id,
++            text: sentMessage.text,
++            senderId: sentMessage.sender.id,
++            createdAt: sentMessage.createdAt,
++          },
++          0,
++          sentMessage.createdAt,
++        ),
++      );
++      setError(null);
++      setAnnouncement(`Message sent: ${sentMessage.text}`);
++    } catch (sendError) {
++      const message = sendError instanceof Error ? sendError.message : 'Failed to send message.';
++      setMessagesByConversation((currentMessages) => ({
++        ...currentMessages,
++        [activeConversationId]: (currentMessages[activeConversationId] ?? []).map((threadMessage) =>
++          threadMessage.id === clientMessageId
++            ? {
++                ...threadMessage,
++                status: 'failed',
++                errorMessage: message,
++              }
++            : threadMessage,
++        ),
++      }));
++      setError(message);
++      setAnnouncement(message);
++    }
++  };
++
++  const retryMessage = async (messageId: string) => {
++    if (!activeConversationId) {
++      return;
++    }
++
++    const failedMessage = (messagesByConversation[activeConversationId] ?? []).find((message) => message.id === messageId);
++    if (!failedMessage) {
++      return;
++    }
++
++    setMessagesByConversation((currentMessages) => ({
++      ...currentMessages,
++      [activeConversationId]: (currentMessages[activeConversationId] ?? []).filter((message) => message.id !== messageId),
++    }));
++    await sendMessage(failedMessage.text);
++  };
++
++  useEffect(() => {
++    if (isAuthLoading) {
++      return;
++    }
++
++    if (!user) {
++      resetChatState();
++      previousUserIdRef.current = null;
++      return;
++    }
++
++    if (previousUserIdRef.current !== null && previousUserIdRef.current !== user.id) {
++      resetChatState();
++    }
++
++    previousUserIdRef.current = user.id;
++
++    void refreshConversations();
++    // Token changes are already handled by the auth provider; the chat cache should refresh on login.
++  }, [user, isAuthLoading, token, refreshConversations]);
++
++  useEffect(() => {
++    if (!isOpen || !activeConversationId) {
++      return;
++    }
++
++    if (!messagesByConversation[activeConversationId]) {
++      void loadMessages(activeConversationId, true);
++    }
++  }, [isOpen, activeConversationId, loadMessages, messagesByConversation]);
++
++  useEffect(() => {
++    if (!isOpen || !activeConversationId) {
++      return;
++    }
++
++    const messages = messagesByConversation[activeConversationId] ?? [];
++    const lastMessage = messages[messages.length - 1];
++
++    if (!lastMessage || lastMessage.status === 'failed') {
++      return;
++    }
++
++    if (lastReadMessageRef.current[activeConversationId] === lastMessage.id) {
++      return;
++    }
++
++    lastReadMessageRef.current[activeConversationId] = lastMessage.id;
++    setConversations((currentConversations) =>
++      currentConversations.map((conversation) =>
++        conversation.id === activeConversationId
++          ? {
++              ...conversation,
++              unreadCount: 0,
++            }
++          : conversation,
++      ),
++    );
++
++    void provider.markRead(activeConversationId, {
++      lastReadMessageId: lastMessage.id,
++    });
++  }, [isOpen, activeConversationId, messagesByConversation, provider]);
++
++  const value: ChatContextValue = {
++    isOpen,
++    conversations,
++    activeConversationId,
++    activeConversation,
++    adminDirectory,
++    messagesByConversation,
++    unreadCount,
++    isLoadingConversations,
++    isLoadingAdmins,
++    isLoadingMessages,
++    error,
++    announcement,
++    openChat,
++    closeChat,
++    toggleChat,
++    selectConversation,
++    loadAdmins,
++    startConversationWithAdmin,
++    refreshConversations,
++    createConversation,
++    loadMoreMessages: async (conversationId: string) => {
++      await loadMessages(conversationId, false);
++    },
++    sendMessage,
++    retryMessage,
++  };
++
++  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
++}
++
++export function useChat() {
++  const context = useContext(ChatContext);
++  if (!context) {
++    throw new Error('useChat must be used within ChatStoreProvider');
++  }
++
++  return context;
++}
+diff --git a/src/pages/Profile.tsx b/src/pages/Profile.tsx
+index 4e30bef..6d09ff0 100644
+--- a/src/pages/Profile.tsx
++++ b/src/pages/Profile.tsx
+@@ -30,10 +30,10 @@ export function Profile() {
+         </div>
+ 
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+-          {user?.userType && (
++          {(user?.role?.name || user?.role?.type) && (
+             <div>
+-              <p className="text-gray-500 dark:text-gray-400">User Type</p>
+-              <p className="font-medium text-gray-900 dark:text-white">{user.userType}</p>
++              <p className="text-gray-500 dark:text-gray-400">Role</p>
++              <p className="font-medium text-gray-900 dark:text-white">{user.role?.name || user.role?.type}</p>
+             </div>
+           )}
+           {user?.universityId && (
+diff --git a/src/pages/Register.tsx b/src/pages/Register.tsx
+index f793628..47c384e 100644
+--- a/src/pages/Register.tsx
++++ b/src/pages/Register.tsx
+@@ -50,7 +50,7 @@ export function Register() {
+         email: email.trim(),
+         password,
+         displayName: displayName.trim(),
+-        userType: choice,
++        role: choice,
+         universityId: choice === 'college-member' ? universityId.trim() : undefined,
+       });
+       navigate('/profile');
+diff --git a/src/pages/RootHome/RootPage.tsx b/src/pages/RootHome/RootPage.tsx
+index ebe9cd5..310d376 100644
+--- a/src/pages/RootHome/RootPage.tsx
++++ b/src/pages/RootHome/RootPage.tsx
+@@ -1,10 +1,10 @@
+ import { CmsSingleTypePage } from '../../components/CmsSingleTypePage';
+-import { getHomepage } from '../../services/cmsApi';
++import { getPageBySlug } from '../../services/cmsApi';
+ 
+ export function RootPage() {
+     return (
+         <CmsSingleTypePage
+-            fetcher={getHomepage}
++            fetcher={() => getPageBySlug('home')}
+             fallbackTitle="Home"
+             fallbackSubtitle="Welcome"
+         />
+diff --git a/src/services/auth.ts b/src/services/auth.ts
+index 3511507..882be47 100644
+--- a/src/services/auth.ts
++++ b/src/services/auth.ts
+@@ -12,7 +12,6 @@ export interface StrapiUser {
+   username: string;
+   email: string;
+   displayName?: string;
+-  userType?: 'visitor' | 'college-member' | 'admin';
+   universityId?: string;
+   bio?: string;
+   phoneNumber?: string;
+@@ -50,7 +49,7 @@ export interface RegisterPayload {
+   email: string;
+   password: string;
+   displayName: string;
+-  userType: 'visitor' | 'college-member' | 'admin';
++  role: 'visitor' | 'college-member';
+   universityId?: string;
+ }
+ 
+@@ -83,7 +82,8 @@ export async function login(identifier: string, password: string): Promise<AuthR
+ }
+ 
+ export async function register(payload: RegisterPayload): Promise<AuthResponse> {
+-  // Strapi local register usually accepts only username/email/password unless extended server-side.
++  // Some Strapi setups reject custom fields on /auth/local/register.
++  // Try role-aware payload first, then gracefully fall back.
+   try {
+     return await apiRequest<AuthResponse>('/api/auth/local/register', {
+       method: 'POST',
+@@ -92,9 +92,32 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse>
+         username: payload.username,
+         email: payload.email,
+         password: payload.password,
++        displayName: payload.displayName,
++        role: payload.role,
++        universityId: payload.universityId,
+       },
+     });
+   } catch (err) {
++    const message = err instanceof Error ? err.message : String(err);
++
++    if (/invalid parameter role/i.test(message)) {
++      try {
++        return await apiRequest<AuthResponse>('/api/auth/local/register', {
++          method: 'POST',
++          auth: false,
++          body: {
++            username: payload.username,
++            email: payload.email,
++            password: payload.password,
++            displayName: payload.displayName,
++            universityId: payload.universityId,
++          },
++        });
++      } catch (fallbackErr) {
++        throw normalizeAuthError(fallbackErr, 'register');
++      }
++    }
++
+     throw normalizeAuthError(err, 'register');
+   }
+ }
+diff --git a/src/services/chat/apiChatProvider.ts b/src/services/chat/apiChatProvider.ts
+new file mode 100644
+index 0000000..12304b1
+--- /dev/null
++++ b/src/services/chat/apiChatProvider.ts
+@@ -0,0 +1,228 @@
++import { apiRequest } from '../api';
++import { apiClient } from '../api';
++import type { AxiosError } from 'axios';
++import type {
++  ChatMessage,
++  ChatConversation,
++  ChatConversationListResponse,
++  ChatCreateConversationPayload,
++  ChatMarkReadPayload,
++  ChatParticipant,
++  ChatMessageListResponse,
++  ChatProvider,
++  ChatSendMessagePayload,
++} from './types';
++
++type UnknownRecord = Record<string, unknown>;
++
++const toIso = (value: unknown): string => {
++  if (typeof value === 'string' && value.trim()) {
++    return value;
++  }
++  return new Date().toISOString();
++};
++
++const toNumber = (value: unknown, fallback = 0): number => {
++  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
++};
++
++const toStringId = (value: unknown): string => {
++  if (typeof value === 'string' && value) {
++    return value;
++  }
++  if (typeof value === 'number' && Number.isFinite(value)) {
++    return String(value);
++  }
++  return `conv_${Date.now()}`;
++};
++
++const participantFromAdmin = (adminUserId: number): ChatParticipant => ({
++  id: adminUserId,
++  displayName: adminUserId > 0 ? `Admin #${adminUserId}` : 'Admin',
++  avatarUrl: null,
++});
++
++const mapConversation = (raw: UnknownRecord): ChatConversation => {
++  const id = toStringId(raw.id ?? raw.documentId);
++  const adminUserId = toNumber(raw.adminUserId, 0);
++  const title = typeof raw.title === 'string' && raw.title.trim()
++    ? raw.title
++    : adminUserId > 0
++      ? `Chat with Admin #${adminUserId}`
++      : 'Chat';
++  const updatedAt = toIso(raw.lastMessageAt ?? raw.updatedAt ?? raw.createdAt);
++
++  return {
++    id,
++    title,
++    participants: [participantFromAdmin(adminUserId)],
++    lastMessage: null,
++    unreadCount: toNumber(raw.unreadForUser ?? raw.unreadCount, 0),
++    updatedAt,
++  };
++};
++
++const mapMessage = (raw: UnknownRecord): ChatMessage => {
++  const senderType = typeof raw.senderType === 'string' ? raw.senderType : 'admin';
++  const senderId = senderType === 'user'
++    ? toNumber(raw.senderFrontendUser, 0)
++    : toNumber(raw.senderAdminUserId, 0);
++
++  return {
++    id: toStringId(raw.id ?? raw.documentId),
++    conversationId: toStringId(raw.conversation ?? raw.conversationId),
++    text: typeof raw.body === 'string' ? raw.body : typeof raw.text === 'string' ? raw.text : '',
++    sender: {
++      id: senderId,
++      displayName: senderType === 'user' ? 'You' : senderId > 0 ? `Admin #${senderId}` : 'Admin',
++      avatarUrl: null,
++    },
++    status: 'sent',
++    createdAt: toIso(raw.createdAt),
++    clientMessageId: typeof raw.clientMessageId === 'string' ? raw.clientMessageId : null,
++  };
++};
++
++const extractArray = <T>(value: unknown): T[] => {
++  if (Array.isArray(value)) {
++    return value as T[];
++  }
++  if (value && typeof value === 'object' && Array.isArray((value as UnknownRecord).data)) {
++    return (value as UnknownRecord).data as T[];
++  }
++  return [];
++};
++
++export function createApiChatProvider(): ChatProvider {
++  return {
++    async listConversations(page = 1, pageSize = 20): Promise<ChatConversationListResponse> {
++      const response = await apiRequest<unknown>('/api/chat/conversations', {
++        params: {
++          page,
++          pageSize,
++        },
++      });
++
++      const rows = extractArray<UnknownRecord>(response);
++      const data = rows.map(mapConversation);
++
++      return {
++        data,
++        meta: {
++          pagination: {
++            page,
++            pageSize,
++            total: data.length,
++            pageCount: 1,
++          },
++        },
++      };
++    },
++
++    async listAdmins() {
++      try {
++        const response = await apiClient.get<{ data?: Array<{ id: number; firstname?: string; lastname?: string; email?: string }> }>('/api/chat/admins');
++
++        if (response.status !== 200) {
++          console.error('[chat/admins] non-200 response', {
++            status: response.status,
++            payload: response.data,
++          });
++          throw new Error('Unable to load admins');
++        }
++
++        const rows = Array.isArray(response.data?.data) ? response.data.data : [];
++
++        return {
++          data: rows.map((admin) => {
++            const fullName = `${admin.firstname || ''} ${admin.lastname || ''}`.trim();
++
++            return {
++              id: admin.id,
++              displayName: fullName || admin.email || `Admin #${admin.id}`,
++              avatarUrl: null,
++              role: 'admin',
++            };
++          }),
++        };
++      } catch (error) {
++        const axiosError = error as AxiosError<{ error?: unknown }>;
++        console.error('[chat/admins] request failed', {
++          status: axiosError.response?.status,
++          payload: axiosError.response?.data,
++        });
++        throw new Error('Unable to load admins');
++      }
++    },
++
++    async createConversation(payload: ChatCreateConversationPayload): Promise<{ data: ChatConversation }> {
++      const response = await apiRequest<unknown>('/api/chat/conversations/start', {
++        method: 'POST',
++        body: {
++          adminUserId: payload.participantIds[0],
++        },
++      });
++
++      const row = (response && typeof response === 'object' && 'data' in (response as UnknownRecord)
++        ? (response as UnknownRecord).data
++        : response) as UnknownRecord;
++
++      return { data: mapConversation(row || {}) };
++    },
++
++    async listMessages(conversationId: string, cursor?: string | null, pageSize = 30): Promise<ChatMessageListResponse> {
++      const response = await apiRequest<unknown>(`/api/chat/conversations/${conversationId}/messages`, {
++        params: {
++          ...(cursor ? { cursor } : {}),
++          pageSize,
++        },
++      });
++
++      const rows = extractArray<UnknownRecord>(response);
++
++      return {
++        data: rows.map(mapMessage),
++        meta: {
++          nextCursor: null,
++        },
++      };
++    },
++
++    async sendMessage(conversationId: string, payload: ChatSendMessagePayload) {
++      const response = await apiRequest<unknown>(`/api/chat/conversations/${conversationId}/messages`, {
++        method: 'POST',
++        body: {
++          body: payload.text,
++          clientMessageId: payload.clientMessageId,
++        },
++      });
++
++      const row = (response && typeof response === 'object' && 'data' in (response as UnknownRecord)
++        ? (response as UnknownRecord).data
++        : response) as UnknownRecord;
++
++      return {
++        data: mapMessage({
++          ...(row || {}),
++          conversation: conversationId,
++        }),
++      };
++    },
++
++    async markRead(conversationId: string, payload: ChatMarkReadPayload) {
++      try {
++        return await apiRequest<{ data: { conversationId: string; unreadCount: number } }>(`/api/chat/conversations/${conversationId}/read`, {
++          method: 'POST',
++          body: payload,
++        });
++      } catch {
++        return {
++          data: {
++            conversationId,
++            unreadCount: 0,
++          },
++        };
++      }
++    },
++  };
++}
+diff --git a/src/services/chat/index.ts b/src/services/chat/index.ts
+new file mode 100644
+index 0000000..d92b961
+--- /dev/null
++++ b/src/services/chat/index.ts
+@@ -0,0 +1,20 @@
++import { createApiChatProvider } from './apiChatProvider';
++import { createMockChatProvider } from './mockChatProvider';
++import type { ChatProvider, ChatProviderCurrentUser } from './types';
++
++export type ChatProviderMode = 'mock' | 'api';
++
++const getEnv = () => import.meta.env as ImportMetaEnv & Record<string, string | undefined>;
++
++export const getChatProviderMode = (): ChatProviderMode => {
++  const env = getEnv();
++  const rawProvider = (env.CHAT_PROVIDER ?? env.VITE_CHAT_PROVIDER ?? 'api').toLowerCase();
++
++  return rawProvider === 'api' ? 'api' : 'mock';
++};
++
++export const createChatProvider = (currentUser?: ChatProviderCurrentUser): ChatProvider => {
++  return getChatProviderMode() === 'api' ? createApiChatProvider() : createMockChatProvider(currentUser);
++};
++
++export * from './types';
+diff --git a/src/services/chat/mockChatProvider.ts b/src/services/chat/mockChatProvider.ts
+new file mode 100644
+index 0000000..5d922b6
+--- /dev/null
++++ b/src/services/chat/mockChatProvider.ts
+@@ -0,0 +1,237 @@
++import type {
++  ChatAdmin,
++  ChatConversation,
++  ChatConversationListResponse,
++  ChatCreateConversationPayload,
++  ChatMarkReadPayload,
++  ChatMessage,
++  ChatMessageListResponse,
++  ChatParticipant,
++  ChatProvider,
++  ChatProviderCurrentUser,
++  ChatSendMessagePayload,
++} from './types';
++
++const delay = async (milliseconds = 250) => {
++  await new Promise((resolve) => window.setTimeout(resolve, milliseconds));
++};
++
++const cloneConversation = (conversation: ChatConversation): ChatConversation => ({
++  ...conversation,
++  participants: conversation.participants.map((participant) => ({ ...participant })),
++  lastMessage: conversation.lastMessage ? { ...conversation.lastMessage } : conversation.lastMessage,
++});
++
++const cloneMessage = (message: ChatMessage): ChatMessage => ({
++  ...message,
++  sender: { ...message.sender },
++});
++
++const createTimestamp = (offsetMinutes: number) => {
++  const timestamp = new Date();
++  timestamp.setMinutes(timestamp.getMinutes() + offsetMinutes);
++  return timestamp.toISOString();
++};
++
++export function createMockChatProvider(currentUser: ChatProviderCurrentUser = {
++  id: 12,
++  displayName: 'Assem',
++  avatarUrl: null,
++}): ChatProvider {
++  const currentUserParticipant: ChatParticipant = {
++    ...currentUser,
++  };
++
++  const adminDirectory: ChatAdmin[] = [];
++
++  const conversations: ChatConversation[] = [];
++
++  const messagesByConversation: Record<string, ChatMessage[]> = {};
++
++  let conversationCounter = 1;
++  let messageCounter = 1;
++
++  const sortConversations = () => {
++    conversations.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
++  };
++
++  const nextConversationId = () => `conv_${conversationCounter++}`;
++  const nextMessageId = () => `msg_${messageCounter++}`;
++
++  return {
++    async listConversations(page = 1, pageSize = 20): Promise<ChatConversationListResponse> {
++      await delay();
++      sortConversations();
++
++      const start = (page - 1) * pageSize;
++      const pageItems = conversations.slice(start, start + pageSize).map(cloneConversation);
++
++      return {
++        data: pageItems,
++        meta: {
++          pagination: {
++            page,
++            pageSize,
++            total: conversations.length,
++            pageCount: Math.max(1, Math.ceil(conversations.length / pageSize)),
++          },
++        },
++      };
++    },
++
++    async listAdmins(query?: string) {
++      await delay(180);
++      const normalizedQuery = (query || '').trim().toLowerCase();
++
++      const filtered = !normalizedQuery
++        ? adminDirectory
++        : adminDirectory.filter((admin) => admin.displayName.toLowerCase().includes(normalizedQuery));
++
++      return {
++        data: filtered.map((admin) => ({ ...admin })),
++      };
++    },
++
++    async createConversation(payload: ChatCreateConversationPayload): Promise<{ data: ChatConversation }> {
++      await delay();
++
++      const existingConversation = conversations.find((conversation) =>
++        conversation.participants.some((participant) => participant.id === currentUserParticipant.id) &&
++        payload.participantIds.every((participantId) => conversation.participants.some((participant) => participant.id === participantId)) &&
++        conversation.title === payload.title,
++      );
++
++      if (existingConversation) {
++        return { data: cloneConversation(existingConversation) };
++      }
++
++      const createdAt = createTimestamp(0);
++      const targetParticipantId = payload.participantIds[0] ?? 0;
++      const targetParticipant: ChatParticipant = {
++        id: targetParticipantId,
++        displayName: payload.title.replace(/^Chat with\s+/i, '') || 'Admin',
++        avatarUrl: null,
++      };
++      const participants = [currentUserParticipant, targetParticipant];
++      const conversation: ChatConversation = {
++        id: nextConversationId(),
++        title: payload.title,
++        participants,
++        unreadCount: 0,
++        updatedAt: createdAt,
++        lastMessage: null,
++      };
++
++      conversations.unshift(conversation);
++      messagesByConversation[conversation.id] = [];
++
++      return { data: cloneConversation(conversation) };
++    },
++
++    async listMessages(conversationId: string, cursor?: string | null, pageSize = 30): Promise<ChatMessageListResponse> {
++      await delay();
++
++      const messages = messagesByConversation[conversationId] ?? [];
++      if (messages.length === 0) {
++        return { data: [], meta: { nextCursor: null } };
++      }
++
++      if (!cursor) {
++        const latestMessages = messages.slice(-pageSize).map(cloneMessage);
++        const nextCursor = messages.length > pageSize ? latestMessages[0]?.id ?? null : null;
++
++        return {
++          data: latestMessages,
++          meta: {
++            nextCursor,
++          },
++        };
++      }
++
++      const cursorIndex = messages.findIndex((message) => message.id === cursor);
++      if (cursorIndex <= 0) {
++        return { data: [], meta: { nextCursor: null } };
++      }
++
++      const sliceEnd = cursorIndex;
++      const sliceStart = Math.max(0, sliceEnd - pageSize);
++      const olderMessages = messages.slice(sliceStart, sliceEnd).map(cloneMessage);
++
++      return {
++        data: olderMessages,
++        meta: {
++          nextCursor: sliceStart > 0 ? olderMessages[0]?.id ?? null : null,
++        },
++      };
++    },
++
++    async sendMessage(conversationId: string, payload: ChatSendMessagePayload) {
++      await delay(300);
++
++      if (payload.text.toLowerCase().includes('fail-mock')) {
++        throw new Error('Mock delivery failure');
++      }
++
++      const conversation = conversations.find((item) => item.id === conversationId);
++      if (!conversation) {
++        throw new Error('Conversation not found');
++      }
++
++      const createdAt = createTimestamp(0);
++      const message: ChatMessage = {
++        id: nextMessageId(),
++        conversationId,
++        text: payload.text,
++        sender: currentUserParticipant,
++        status: 'sent',
++        createdAt,
++        clientMessageId: payload.clientMessageId ?? null,
++      };
++
++      messagesByConversation[conversationId] = [...(messagesByConversation[conversationId] ?? []), message];
++      conversation.lastMessage = {
++        id: message.id,
++        text: message.text,
++        senderId: message.sender.id,
++        createdAt: message.createdAt,
++      };
++      conversation.updatedAt = createdAt;
++      conversation.unreadCount = 0;
++      sortConversations();
++
++      return { data: cloneMessage(message) };
++    },
++
++    async markRead(conversationId: string, payload: ChatMarkReadPayload) {
++      await delay(120);
++
++      const conversation = conversations.find((item) => item.id === conversationId);
++      if (!conversation) {
++        throw new Error('Conversation not found');
++      }
++
++      conversation.unreadCount = 0;
++      conversation.updatedAt = createTimestamp(0);
++      if (payload.lastReadMessageId) {
++        const lastMessage = (messagesByConversation[conversationId] ?? []).find((message) => message.id === payload.lastReadMessageId);
++        if (lastMessage) {
++          conversation.lastMessage = {
++            id: lastMessage.id,
++            text: lastMessage.text,
++            senderId: lastMessage.sender.id,
++            createdAt: lastMessage.createdAt,
++          };
++        }
++      }
++
++      sortConversations();
++
++      return {
++        data: {
++          conversationId,
++          unreadCount: 0,
++        },
++      };
++    },
++  };
++}
+diff --git a/src/services/chat/types.ts b/src/services/chat/types.ts
+new file mode 100644
+index 0000000..6edae8e
+--- /dev/null
++++ b/src/services/chat/types.ts
+@@ -0,0 +1,91 @@
++export interface ChatParticipant {
++  id: number;
++  displayName: string;
++  avatarUrl: string | null;
++}
++
++export interface ChatAdmin extends ChatParticipant {
++  role?: string;
++}
++
++export interface ChatConversationMessagePreview {
++  id: string;
++  text: string;
++  senderId: number;
++  createdAt: string;
++}
++
++export interface ChatConversation {
++  id: string;
++  title: string;
++  participants: ChatParticipant[];
++  lastMessage?: ChatConversationMessagePreview | null;
++  unreadCount: number;
++  updatedAt: string;
++}
++
++export type ChatMessageStatus = 'sent' | 'sending' | 'failed';
++
++export interface ChatMessage {
++  id: string;
++  conversationId: string;
++  text: string;
++  sender: ChatParticipant;
++  status: ChatMessageStatus;
++  createdAt: string;
++  clientMessageId?: string | null;
++}
++
++export interface ChatPaginationMeta {
++  pagination: {
++    page: number;
++    pageSize: number;
++    total: number;
++    pageCount: number;
++  };
++}
++
++export interface ChatConversationListResponse {
++  data: ChatConversation[];
++  meta: ChatPaginationMeta;
++}
++
++export interface ChatMessageListResponse {
++  data: ChatMessage[];
++  meta: {
++    nextCursor: string | null;
++  };
++}
++
++export interface ChatCreateConversationPayload {
++  participantIds: number[];
++  title: string;
++}
++
++export interface ChatSendMessagePayload {
++  text: string;
++  clientMessageId?: string;
++}
++
++export interface ChatMarkReadPayload {
++  lastReadMessageId: string;
++}
++
++export interface ChatProvider {
++  listConversations(page?: number, pageSize?: number): Promise<ChatConversationListResponse>;
++  listAdmins(query?: string): Promise<{ data: ChatAdmin[] }>;
++  createConversation(payload: ChatCreateConversationPayload): Promise<{ data: ChatConversation }>;
++  listMessages(conversationId: string, cursor?: string | null, pageSize?: number): Promise<ChatMessageListResponse>;
++  sendMessage(conversationId: string, payload: ChatSendMessagePayload): Promise<{ data: ChatMessage }>;
++  markRead(conversationId: string, payload: ChatMarkReadPayload): Promise<{ data: { conversationId: string; unreadCount: number } }>;
++}
++
++export interface ChatProviderCurrentUser {
++  id: number;
++  displayName: string;
++  avatarUrl: string | null;
++}
++
++export interface ChatThreadMessage extends ChatMessage {
++  errorMessage?: string;
++}
+diff --git a/src/services/cmsApi.ts b/src/services/cmsApi.ts
+index 266af8a..6ab21fa 100644
+--- a/src/services/cmsApi.ts
++++ b/src/services/cmsApi.ts
+@@ -11,6 +11,7 @@ import {
+   Resources, 
+   Announcements, 
+   ContactUs,
++  StrapiCollectionResponse,
+   StrapiSingleTypeResponse 
+ } from '../types/strapi';
+ 
+@@ -21,6 +22,7 @@ const CMS_API_ENDPOINTS = {
+   RESOURCES: '/api/resources',
+   ANNOUNCEMENTS: '/api/announcements',
+   CONTACT_US: '/api/contact-us',
++  PAGES: '/api/pages',
+ } as const;
+ 
+ /** Default populate query to fetch all relations */
+@@ -33,6 +35,7 @@ type CmsBlock = {
+   body?: string;
+   quote?: string;
+   author?: string;
++  anchor?: string;
+   media?: {
+     url?: string;
+     alternativeText?: string;
+@@ -56,6 +59,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+         return {
+           type: 'rich-text' as const,
+           content: block.content,
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -64,6 +68,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+           type: 'quote' as const,
+           quote: block.quote,
+           author: block.author,
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -73,6 +78,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+           url: block.media.url,
+           alt: block.media.alternativeText,
+           caption: block.media.caption,
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -86,6 +92,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+               title: slide.title,
+               description: slide.description,
+             })),
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -95,6 +102,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+         return {
+           type: 'rich-text' as const,
+           content: block.body,
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -103,6 +111,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+           type: 'quote' as const,
+           quote: block.quote,
+           author: block.author,
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -112,6 +121,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+           url: block.media.url,
+           alt: block.media.alternativeText,
+           caption: block.media.caption,
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -125,6 +135,7 @@ function normalizeBlocks(blocks: unknown): Homepage['blocks'] {
+               title: slide.title,
+               description: slide.description,
+             })),
++          anchor: block.anchor,
+         };
+       }
+ 
+@@ -153,6 +164,10 @@ function normalizeSingleTypeResponse<T extends { blocks?: unknown }>(data: T): T
+   };
+ }
+ 
++function normalizePageResponse<T extends { blocks?: unknown }>(page: T): T {
++  return normalizeSingleTypeResponse(page);
++}
++
+ /**
+  * Fetch homepage content
+  */
+@@ -169,6 +184,35 @@ export async function getHomepage(): Promise<Homepage> {
+   }
+ }
+ 
++/**
++ * Fetch a CMS page by slug from the generic pages collection.
++ */
++export async function getPageBySlug(slug: string): Promise<Homepage> {
++  const normalizedSlug = slug.trim().toLowerCase();
++
++  if (!normalizedSlug) {
++    throw new Error('Page slug is required.');
++  }
++
++  try {
++    const response = await apiRequest<StrapiCollectionResponse<Homepage>>(
++      `${CMS_API_ENDPOINTS.PAGES}?filters[slug][$eq]=${encodeURIComponent(normalizedSlug)}&${DEFAULT_POPULATE}`,
++      { auth: false }
++    );
++
++    const page = Array.isArray(response.data) ? response.data[0] : undefined;
++
++    if (!page) {
++      throw new Error(`Page not found for slug: ${normalizedSlug}`);
++    }
++
++    return normalizePageResponse(page as Homepage);
++  } catch (error) {
++    console.error(`Error fetching page by slug (${normalizedSlug}):`, error);
++    throw error;
++  }
++}
++
+ /**
+  * Fetch academics content
+  */
+diff --git a/src/types/strapi.ts b/src/types/strapi.ts
+index 52f876d..39c7a5e 100644
+--- a/src/types/strapi.ts
++++ b/src/types/strapi.ts
+@@ -20,18 +20,25 @@ export interface StrapiSingleTypeResponse<T> {
+   meta?: Record<string, any>;
+ }
+ 
++export interface StrapiCollectionResponse<T> {
++  data: T[];
++  meta?: Record<string, any>;
++}
++
+ /**
+  * Block types for dynamic content rendering
+  */
+ export interface RichTextBlock {
+   type: 'rich-text';
+   content: string;
++  anchor?: string;
+ }
+ 
+ export interface QuoteBlock {
+   type: 'quote';
+   quote: string;
+   author?: string;
++  anchor?: string;
+ }
+ 
+ export interface MediaBlock {
+@@ -39,6 +46,7 @@ export interface MediaBlock {
+   url: string;
+   alt?: string;
+   caption?: string;
++  anchor?: string;
+ }
+ 
+ export interface SliderBlock {
+@@ -48,6 +56,7 @@ export interface SliderBlock {
+     title?: string;
+     description?: string;
+   }[];
++  anchor?: string;
+ }
+ 
+ export type ContentBlock = RichTextBlock | QuoteBlock | MediaBlock | SliderBlock;
+@@ -57,6 +66,7 @@ export type ContentBlock = RichTextBlock | QuoteBlock | MediaBlock | SliderBlock
+  */
+ export interface Homepage {
+   id: number;
++  slug?: string;
+   title?: string;
+   subtitle?: string;
+   description?: string;

@@ -5,22 +5,6 @@ import { Link } from 'react-router-dom';
 import { apiRequest, getCurrentApiBaseUrl } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const fallbackImages = [
-  '/images/1.jpeg',
-  '/images/3.jpeg',
-  '/images/4.jpeg',
-  '/images/5.jpeg',
-  '/images/6.jpeg',
-  '/images/7.jpeg',
-  '/images/8.jpeg',
-  '/images/9.jpeg',
-  '/images/10.jpeg',
-  '/images/11.jpeg',
-  '/images/12.jpeg',
-  '/images/13.jpeg',
-  '/images/WhatsApp Image 2026-03-25 at 7.29.24 PM.jpeg'
-];
-
 type SliderImage = {
   id: number | string;
   src: string;
@@ -55,7 +39,7 @@ type HeroNavTreeApiItem = {
   title?: string;
   url?: string;
   target?: HeroNavTarget;
-  isProtected?: boolean;
+  accessRole?: 'public' | 'visitor' | 'college-member';
   children?: HeroNavTreeApiItem[];
 };
 
@@ -63,15 +47,11 @@ type HeroNavTreeItem = {
   title: string;
   url: string;
   target: HeroNavTarget;
-  isProtected: boolean;
+  accessRole: 'public' | 'visitor' | 'college-member';
   children: HeroNavTreeItem[];
 };
 
-const fallbackSlides: SliderImage[] = fallbackImages.map((src, index) => ({
-  id: `fallback-${index}`,
-  src,
-  title: `Slide ${index + 1}`,
-}));
+type MenuAccessRole = 'public' | 'visitor' | 'college-member';
 
 const getStrapiBaseUrl = () => {
   const base = getCurrentApiBaseUrl().trim();
@@ -95,15 +75,6 @@ const toAbsoluteUrl = (url: string, baseUrl: string) => {
   }
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 };
-
-const fallbackHeroNavTree: HeroNavTreeItem[] = [
-  { title: 'Home', url: '/', target: '_self', isProtected: false, children: [] },
-  { title: 'Academics', url: '/academics', target: '_self', isProtected: false, children: [] },
-  { title: 'Questionnaires', url: '/questionnaires', target: '_self', isProtected: false, children: [] },
-  { title: 'Resources', url: '/resources', target: '_self', isProtected: false, children: [] },
-  { title: 'Announcements', url: '/announcements', target: '_self', isProtected: false, children: [] },
-  { title: 'Contact Us', url: '/contact-us', target: '_self', isProtected: false, children: [] },
-];
 
 const normalizeNavPath = (url: string) => {
   const trimmed = url.trim();
@@ -201,24 +172,44 @@ const normalizeHeroNavTree = (items: HeroNavTreeApiItem[]): HeroNavTreeItem[] =>
       }
 
       const target: HeroNavTarget = item.target === '_blank' ? '_blank' : '_self';
+      const accessRole: MenuAccessRole =
+        item.accessRole === 'visitor' || item.accessRole === 'college-member'
+          ? item.accessRole
+          : 'public';
 
       return {
         title,
         url: target === '_self' ? normalizeNavPath(rawUrl) : rawUrl,
         target,
-        isProtected: Boolean(item.isProtected),
+        accessRole,
         children: normalizeHeroNavTree(Array.isArray(item.children) ? item.children : []),
       };
     })
     .filter((item): item is HeroNavTreeItem => item !== null);
 };
 
-const filterProtectedHeroNavTree = (items: HeroNavTreeItem[], isLoggedIn: boolean): HeroNavTreeItem[] => {
+const isMenuItemVisibleForRole = (accessRole: MenuAccessRole, userRole?: string | null): boolean => {
+  if (accessRole === 'public') {
+    return true;
+  }
+
+  if (userRole === 'admin') {
+    return true;
+  }
+
+  if (accessRole === 'visitor') {
+    return userRole === 'visitor' || userRole === 'college-member';
+  }
+
+  return userRole === 'college-member';
+};
+
+const filterVisibleHeroNavTree = (items: HeroNavTreeItem[], userRole?: string | null): HeroNavTreeItem[] => {
   return items
-    .filter((item) => isLoggedIn || !item.isProtected)
+    .filter((item) => isMenuItemVisibleForRole(item.accessRole, userRole))
     .map((item) => ({
       ...item,
-      children: filterProtectedHeroNavTree(item.children, isLoggedIn),
+      children: filterVisibleHeroNavTree(item.children, userRole),
     }));
 };
 
@@ -291,8 +282,8 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
 export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [slides, setSlides] = useState<SliderImage[]>(fallbackSlides);
-  const [heroNavTree, setHeroNavTree] = useState<HeroNavTreeItem[]>(fallbackHeroNavTree);
+  const [slides, setSlides] = useState<SliderImage[]>([]);
+  const [heroNavTree, setHeroNavTree] = useState<HeroNavTreeItem[]>([]);
   const [activeHeroNavPath, setActiveHeroNavPath] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
@@ -326,14 +317,10 @@ export function HeroSlider() {
           })
           .filter((item): item is SliderImage => item !== null);
 
-        if (mappedSlides.length > 0) {
-          setSlides(mappedSlides);
-          setCurrentIndex(0);
-        } else {
-          setSlides(fallbackSlides);
-        }
+        setSlides(mappedSlides);
+        setCurrentIndex(0);
       } catch {
-        setSlides(fallbackSlides);
+        setSlides([]);
       } finally {
         setIsLoading(false);
       }
@@ -353,13 +340,9 @@ export function HeroSlider() {
         const rawHeroNavTree = parseHeroNavTree(payload);
         const normalizedHeroNavTree = normalizeHeroNavTree(rawHeroNavTree);
 
-        if (normalizedHeroNavTree.length > 0) {
-          setHeroNavTree(normalizedHeroNavTree);
-        } else {
-          setHeroNavTree(fallbackHeroNavTree);
-        }
+        setHeroNavTree(normalizedHeroNavTree);
       } catch {
-        setHeroNavTree(fallbackHeroNavTree);
+        setHeroNavTree([]);
       }
     };
 
@@ -382,7 +365,7 @@ export function HeroSlider() {
     }, 200);
   };
 
-  const visibleHeroNavTree = filterProtectedHeroNavTree(heroNavTree, Boolean(user));
+  const visibleHeroNavTree = filterVisibleHeroNavTree(heroNavTree, user?.role?.type ?? null);
 
   useEffect(() => {
     setLoadedImages({});

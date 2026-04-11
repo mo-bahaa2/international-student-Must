@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       register,
       logout,
-      isAdmin: user?.userType === 'admin' || user?.role?.type === 'admin',
+      isAdmin: user?.role?.type === ROLES.ADMIN,
       isCollegeMember: user?.role?.type === 'college-member',
       refreshUser,
     }),

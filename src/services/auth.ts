@@ -12,7 +12,6 @@ export interface StrapiUser {
   username: string;
   email: string;
   displayName?: string;
-  userType?: 'visitor' | 'college-member' | 'admin';
   universityId?: string;
   bio?: string;
   phoneNumber?: string;
@@ -50,7 +49,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   displayName: string;
-  userType: 'visitor' | 'college-member' | 'admin';
+  role: 'visitor' | 'college-member';
   universityId?: string;
 }
 
@@ -83,7 +82,8 @@ export async function login(identifier: string, password: string): Promise<AuthR
 }
 
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
-  // Strapi local register usually accepts only username/email/password unless extended server-side.
+  // Some Strapi setups reject custom fields on /auth/local/register.
+  // Try role-aware payload first, then gracefully fall back.
   try {
     return await apiRequest<AuthResponse>('/api/auth/local/register', {
       method: 'POST',
@@ -92,9 +92,32 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
         username: payload.username,
         email: payload.email,
         password: payload.password,
+        displayName: payload.displayName,
+        role: payload.role,
+        universityId: payload.universityId,
       },
     });
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+
+    if (/invalid parameter role/i.test(message)) {
+      try {
+        return await apiRequest<AuthResponse>('/api/auth/local/register', {
+          method: 'POST',
+          auth: false,
+          body: {
+            username: payload.username,
+            email: payload.email,
+            password: payload.password,
+            displayName: payload.displayName,
+            universityId: payload.universityId,
+          },
+        });
+      } catch (fallbackErr) {
+        throw normalizeAuthError(fallbackErr, 'register');
+      }
+    }
+
     throw normalizeAuthError(err, 'register');
   }
 }

@@ -30,10 +30,10 @@ export function Profile() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          {user?.userType && (
+          {(user?.role?.name || user?.role?.type) && (
             <div>
-              <p className="text-gray-500 dark:text-gray-400">User Type</p>
-              <p className="font-medium text-gray-900 dark:text-white">{user.userType}</p>
+              <p className="text-gray-500 dark:text-gray-400">Role</p>
+              <p className="font-medium text-gray-900 dark:text-white">{user.role?.name || user.role?.type}</p>
             </div>
           )}
           {user?.universityId && (

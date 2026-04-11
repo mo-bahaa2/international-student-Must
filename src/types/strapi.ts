@@ -20,18 +20,25 @@ export interface StrapiSingleTypeResponse<T> {
   meta?: Record<string, any>;
 }
 
+export interface StrapiCollectionResponse<T> {
+  data: T[];
+  meta?: Record<string, any>;
+}
+
 /**
  * Block types for dynamic content rendering
  */
 export interface RichTextBlock {
   type: 'rich-text';
   content: string;
+  anchor?: string;
 }
 
 export interface QuoteBlock {
   type: 'quote';
   quote: string;
   author?: string;
+  anchor?: string;
 }
 
 export interface MediaBlock {
@@ -39,6 +46,7 @@ export interface MediaBlock {
   url: string;
   alt?: string;
   caption?: string;
+  anchor?: string;
 }
 
 export interface SliderBlock {
@@ -48,6 +56,7 @@ export interface SliderBlock {
     title?: string;
     description?: string;
   }[];
+  anchor?: string;
 }
 
 export type ContentBlock = RichTextBlock | QuoteBlock | MediaBlock | SliderBlock;
@@ -57,6 +66,7 @@ export type ContentBlock = RichTextBlock | QuoteBlock | MediaBlock | SliderBlock
  */
 export interface Homepage {
   id: number;
+  slug?: string;
   title?: string;
   subtitle?: string;
   description?: string;

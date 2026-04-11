@@ -2,6 +2,8 @@ import { AlertCircle, Loader } from 'lucide-react';
 import { ContentBlocks } from './ContentBlocks';
 import { useCmsData } from '../hooks/useCmsData';
 import { ContentBlock } from '../types/strapi';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface CmsSingleTypePageData {
   id?: number;
@@ -22,6 +24,32 @@ export function CmsSingleTypePage<T extends CmsSingleTypePageData>({
   fallbackSubtitle,
 }: CmsSingleTypePageProps<T>) {
   const { data, loading, error } = useCmsData(fetcher, []);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (loading || !data || !location.hash) {
+      return;
+    }
+
+    const anchor = decodeURIComponent(location.hash.replace(/^#/, ''));
+
+    if (!anchor) {
+      return;
+    }
+
+    const scrollToAnchor = () => {
+      const element = document.getElementById(anchor);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(scrollToAnchor);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [data, loading, location.hash]);
 
   if (loading) {
     return (

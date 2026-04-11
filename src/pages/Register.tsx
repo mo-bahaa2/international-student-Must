@@ -50,7 +50,7 @@ export function Register() {
         email: email.trim(),
         password,
         displayName: displayName.trim(),
-        userType: choice,
+        role: choice,
         universityId: choice === 'college-member' ? universityId.trim() : undefined,
       });
       navigate('/profile');
