@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import AcademicStaffProfileCard, { AcademicStaffProfileCardProps } from '../../components/AcademicStaffProfileCard';
 
 export function Academics() {
@@ -58,13 +58,13 @@ export function Academics() {
   }, []);
 
   return (
-    <div className="py-16 px-4 max-w-[1400px] mx-auto min-h-screen pt-32 bg-[#070d19]">
-      <h1 className="text-4xl font-bold text-emerald-400 mb-12 text-center sm:text-left">Academic Staff</h1>
+    <div className="mx-auto min-h-screen max-w-[1400px] px-4 py-16 pt-32">
+      <h1 className="mb-12 text-center text-4xl font-bold text-emerald-700 dark:text-emerald-400 sm:text-left">Academic Staff</h1>
       
       {isLoading ? (
-        <div className="animate-pulse text-emerald-600 text-xl font-bold text-center p-12">Loading Staff from Strapi...</div>
+        <div className="animate-pulse p-12 text-center text-xl font-bold text-emerald-600 dark:text-emerald-400">Loading Staff from Strapi...</div>
       ) : status ? (
-        <div className="text-center text-emerald-400 text-xl font-bold p-12 border border-dashed border-slate-700 rounded-xl">
+        <div className="rounded-xl border border-dashed border-slate-300 p-12 text-center text-xl font-bold text-emerald-700 dark:border-slate-700 dark:text-emerald-400">
           {status}
         </div>
       ) : (

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import React from 'react';
 
 interface EventCardItem {
   id: string;
@@ -30,161 +30,85 @@ interface NewsCarouselProps {
   news: NewsCardItem[];
 }
 
-interface EventsNewsSectionProps {
-  events: EventCardItem[];
-  news: NewsCardItem[];
-  onSeeAllEvents?: () => void;
-}
-
-interface CarouselHeaderProps {
-  title: string;
-  onPrev: () => void;
-  onNext: () => void;
-}
-
-const scrollStep = 360;
-
-function CarouselHeader({ title, onPrev, onNext }: CarouselHeaderProps) {
-  return (
-    <div className="mb-6 flex items-center justify-between gap-4">
-      <h2 className="text-center text-3xl font-bold text-emerald-400 sm:text-left">{title}</h2>
-
-      <div className="hidden items-center gap-2 sm:flex">
-        <button
-          type="button"
-          aria-label={`Previous ${title}`}
-          onClick={onPrev}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-navy-600 bg-navy-900 text-slate-200 transition-colors hover:border-emerald-500 hover:text-emerald-300"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          aria-label={`Next ${title}`}
-          onClick={onNext}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-navy-600 bg-navy-900 text-slate-200 transition-colors hover:border-emerald-500 hover:text-emerald-300"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function RelatedEventsCarousel({ events, onSeeAllEvents }: RelatedEventsCarouselProps) {
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollByAmount = (amount: number) => {
-    if (!scrollContainerRef.current) {
-      return;
-    }
-
-    scrollContainerRef.current.scrollBy({
-      left: amount,
-      behavior: 'smooth',
-    });
-  };
-
   return (
     <section className="w-full">
-      <CarouselHeader
-        title="Related Events"
-        onPrev={() => scrollByAmount(-scrollStep)}
-        onNext={() => scrollByAmount(scrollStep)}
-      />
-
-      <div
-        ref={scrollContainerRef}
-        className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-      >
+      {/* CHANGED: xl:grid-cols-3 and increased gap so cards are wider */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 pb-12">
         {events.map((item) => (
           <article
             key={item.id}
-            className="group min-w-[280px] max-w-[280px] snap-start"
+            className="group w-full flex flex-col bg-navy-800/40 rounded-2xl border border-navy-700 hover:border-emerald-500/50 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-emerald-500/10"
           >
-            <a href={item.href || '#'} className="block">
-              <div className="relative overflow-hidden rounded-sm bg-navy-800">
+            <a href={item.href || '#'} className="block flex-1 flex flex-col">
+              {/* CHANGED: Image height from 280px to 360px */}
+              <div className="relative overflow-hidden bg-navy-800 h-[360px]">
                 <img
                   src={item.imageUrl}
                   alt={item.imageAlt || item.title}
-                  className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
-                <div className="absolute bottom-0 left-3 translate-y-1/2 rounded-md bg-[#162e67] px-4 py-2 text-center shadow-lg">
-                  <p className="text-4xl font-bold leading-none text-slate-100">{item.day}</p>
-                  <p className="mt-1 text-sm text-slate-300">{item.month}</p>
+                <div className="absolute bottom-5 left-5 rounded-xl bg-navy-900/90 backdrop-blur-sm border border-navy-600 px-6 py-4 text-center shadow-2xl">
+                  <p className="text-5xl font-black leading-none text-white">{item.day}</p>
+                  <p className="mt-1 text-base font-bold uppercase tracking-wider text-emerald-400">{item.month}</p>
                 </div>
               </div>
 
-              <div className="pt-8">
-                <p className="mb-3 flex items-center gap-2 text-sm text-slate-400">
-                  <ClockIcon className="h-4 w-4 text-emerald-500" />
+              <div className="p-8 flex-1 flex flex-col">
+                <p className="mb-4 flex items-center gap-2 text-sm font-medium text-emerald-400">
+                  <ClockIcon className="h-4 w-4" />
                   {item.timeRange}
                 </p>
-                <h3 className="line-clamp-2 text-xl font-bold text-slate-100">{item.title}</h3>
-                <p className="mt-2 line-clamp-2 text-base text-slate-400">{item.description}</p>
+                <h3 className="line-clamp-2 text-3xl font-bold text-white mb-4 group-hover:text-emerald-300 transition-colors">{item.title}</h3>
+                <p className="line-clamp-3 text-xl text-slate-400 leading-relaxed flex-1">{item.description}</p>
               </div>
             </a>
           </article>
         ))}
       </div>
 
-      <div className="mt-8 flex justify-center">
-        <button
-          type="button"
-          onClick={onSeeAllEvents}
-          className="rounded-full bg-emerald-600 px-12 py-3 text-lg font-semibold text-white transition-colors hover:bg-emerald-500"
-        >
-          See All Events
-        </button>
-      </div>
+      {onSeeAllEvents && (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={onSeeAllEvents}
+            className="rounded-full bg-emerald-600 px-12 py-4 text-lg font-bold text-white transition-all hover:bg-emerald-500"
+          >
+            See All Events
+          </button>
+        </div>
+      )}
     </section>
   );
 }
 
 export function NewsCarousel({ news }: NewsCarouselProps) {
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollByAmount = (amount: number) => {
-    if (!scrollContainerRef.current) {
-      return;
-    }
-
-    scrollContainerRef.current.scrollBy({
-      left: amount,
-      behavior: 'smooth',
-    });
-  };
-
   return (
     <section className="w-full">
-      <CarouselHeader
-        title="News"
-        onPrev={() => scrollByAmount(-scrollStep)}
-        onNext={() => scrollByAmount(scrollStep)}
-      />
-
-      <div
-        ref={scrollContainerRef}
-        className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-      >
+      {/* CHANGED: xl:grid-cols-3 and increased gap so cards are wider */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 pb-12">
         {news.map((item) => (
           <article
             key={item.id}
-            className="group min-w-[320px] max-w-[320px] snap-start"
+            className="group w-full flex flex-col bg-navy-800/40 rounded-2xl border border-navy-700 hover:border-blue-500/50 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-blue-500/10"
           >
-            <a href={item.href || '#'} className="block">
-              <div className="overflow-hidden rounded-sm bg-navy-800">
+            <a href={item.href || '#'} className="block flex-1 flex flex-col">
+              {/* CHANGED: Image height from 280px to 360px */}
+              <div className="overflow-hidden bg-navy-800 h-[360px]">
                 <img
                   src={item.imageUrl}
                   alt={item.imageAlt || item.title}
-                  className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
 
-              <div className="pt-5">
-                <h3 className="line-clamp-3 text-2xl font-bold leading-8 text-slate-100">{item.title}</h3>
-                <p className="mt-2 line-clamp-2 text-base text-slate-400">{item.description}</p>
+              <div className="p-8 flex-1 flex flex-col">
+                <div className="mb-5">
+                   <span className="inline-block px-4 py-1.5 rounded-full bg-blue-500/20 text-blue-300 text-sm font-bold uppercase tracking-wider border border-blue-500/30">News</span>
+                </div>
+                <h3 className="line-clamp-3 text-3xl font-bold leading-tight text-white mb-4 group-hover:text-blue-300 transition-colors">{item.title}</h3>
+                <p className="line-clamp-3 text-xl text-slate-400 leading-relaxed flex-1">{item.description}</p>
               </div>
             </a>
           </article>
@@ -194,12 +118,15 @@ export function NewsCarousel({ news }: NewsCarouselProps) {
   );
 }
 
-export default function EventsNewsSection({ events, news, onSeeAllEvents }: EventsNewsSectionProps) {
+export default function EventsNewsSection({ events, news, onSeeAllEvents }: { events: EventCardItem[], news: NewsCardItem[], onSeeAllEvents?: () => void }) {
   return (
     <section className="w-full bg-[#0a111f] py-16">
-      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8 lg:px-10">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-10">
+        <h2 className="text-4xl font-bold text-emerald-400 mb-10">Related Events</h2>
         <RelatedEventsCarousel events={events} onSeeAllEvents={onSeeAllEvents} />
-        <div className="mt-14">
+        
+        <div className="mt-24">
+          <h2 className="text-4xl font-bold text-blue-400 mb-10">Latest News</h2>
           <NewsCarousel news={news} />
         </div>
       </div>
@@ -209,50 +136,9 @@ export default function EventsNewsSection({ events, news, onSeeAllEvents }: Even
 
 function ClockIcon({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5v5l3.5 2" />
     </svg>
   );
 }
-
-function ChevronLeft({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className={className}
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
-    </svg>
-  );
-}
-
-function ChevronRight({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className={className}
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
-    </svg>
-  );
-}
-
