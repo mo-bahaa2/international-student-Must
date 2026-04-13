@@ -20,6 +20,7 @@ import { SubmitRequest } from './pages/SubmitRequest';
 import { MyRequests } from './pages/MyRequests';
 import { RootPage } from './pages/RootHome/RootPage';
 import { CmsPage } from './pages/CmsPage';
+import Playground from './pages/Playground';
 import { NotFound } from './pages/NotFound';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -78,6 +79,7 @@ function AppContent() {
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/submit-request" element={<SubmitRequest />} />
   <Route path="/my-requests" element={<MyRequests />} />
+              <Route path="/playground" element={<Playground />} />
               <Route path="/:slug" element={<CmsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -131,6 +131,39 @@ function ContentBlock({ block }: ContentBlockProps) {
         );
       }
 
+      const isPdf = file.mime === 'application/pdf' || /\.pdf($|\?)/i.test(file.url);
+
+      if (isPdf) {
+        return (
+          <div className="my-6 rounded-lg border border-gray-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-900">
+            <a
+              href={mediaUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 text-green-700 dark:text-green-400 hover:opacity-80"
+            >
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-6 w-6"
+                  aria-hidden="true"
+                >
+                  <path d="M6.75 2.25h7.5l5.25 5.25v13.5A1.5 1.5 0 0 1 18 22.5H6a1.5 1.5 0 0 1-1.5-1.5v-17A1.75 1.75 0 0 1 6.25 2.25h.5Zm7.5 1.5v4.5h4.5" />
+                  <path d="M8.25 14.25h7.5v1.5h-7.5v-1.5Zm0 3h4.5v1.5h-4.5v-1.5Zm0-6h7.5v1.5h-7.5v-1.5Z" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold underline break-words">{mediaAlt}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{file.caption}</p>
+              </div>
+            </a>
+    
+          </div>
+        );
+      }
+
       return (
         <div className="my-6 rounded-lg border border-gray-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-900">
           <a
