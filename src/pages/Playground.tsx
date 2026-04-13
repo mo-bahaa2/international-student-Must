@@ -1,6 +1,10 @@
 import AcademicStaffProfileCard, { academicStaffProfileCardMock } from '../components/AcademicStaffProfileCard';
 import EventsNewsSection from '../components/EventsNewsCarousels';
 import { mockNews, mockRelatedEvents } from '../components/eventsNewsMockData';
+import NewStudyPlanResources from '../components/NewStudyPlanResources';
+import { postgradStudyPlanConfig, undergradStudyPlanConfig } from '../components/newStudyPlanResourcesMockData';
+import ResourcesComponent from '../components/ResourcesComponent';
+import { mockGenericReources } from '../components/genericResourcesMockData';
 
 export default function Playground() {
   return (
@@ -17,6 +21,17 @@ export default function Playground() {
       <div className="mt-12">
         <EventsNewsSection events={mockRelatedEvents} news={mockNews} />
       </div>
+
+      <section className="mt-12 bg-white py-12">
+        <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8 lg:px-10">
+          <h2 className="mb-6 text-center text-3xl font-bold text-slate-900 sm:text-left"> Temporary preview for testing</h2>
+          <div className="space-y-8">
+            <NewStudyPlanResources config={undergradStudyPlanConfig} />
+            <NewStudyPlanResources config={postgradStudyPlanConfig} />
+            <ResourcesComponent config={mockGenericReources} />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
