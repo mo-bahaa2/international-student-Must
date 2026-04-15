@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiRequest, getCurrentApiBaseUrl } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -226,14 +226,21 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
   const isTopLevel = level === 0;
   const itemPath = [...path, `${item.title}:${item.url}`];
   const isOpen = itemPath.every((segment, index) => activePath[index] === segment);
+  const labelClassName = `transition-colors duration-300 ${isOpen ? 'text-[#00AC5C]' : ''}`;
 
   const itemClassName = isTopLevel
-    ? 'px-4 py-2 rounded-full bg-gray-800/50 hover:bg-gray-900/65 text-white text-sm md:text-base transition-all duration-500 ease-out inline-flex items-center gap-2'
-    : 'w-full text-left px-4 py-2 bg-[#1f3769] hover:bg-[#284884] text-white transition-all duration-500 ease-out inline-flex items-center justify-between gap-2 text-sm';
+    ? `px-6 h-12 rounded-full bg-white/20 backdrop-blur-md text-white text-sm md:text-base font-bold inline-flex items-center justify-center gap-2 transition-all duration-300 ${
+        isOpen ? 'text-[#00AC5C] border-[#00AC5C]/60 bg-white/18 shadow-[0_12px_24px_rgba(0,0,0,0.25)]' : 'hover:text-[#00AC5C] hover:border-[#00AC5C]/55 hover:bg-white/20'
+      }`
+    : `w-full text-left px-4 py-2.5 rounded-xl border border-transparent bg-white/0 text-white font-bold transition-all duration-300 inline-flex items-center justify-between gap-2 ${
+        isOpen ? 'text-[#00AC5C] bg-white/15 border-white/20' : 'hover:text-[#00AC5C]'
+      }`;
+
+  const iconClassName = `h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#00AC5C]' : 'rotate-0 text-current'}`;
 
   return (
     <li
-      className={`relative ${isTopLevel ? '' : 'w-full'}`}
+      className={`group relative ${isTopLevel ? '' : 'w-full'}`}
       onMouseEnter={() => hasChildren && onActivatePath(itemPath)}
     >
       {item.target === '_blank' ? (
@@ -243,20 +250,20 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
           rel="noopener noreferrer"
           className={itemClassName}
         >
-          <span>{item.title}</span>
-          {hasChildren && <span aria-hidden="true">v</span>}
+          <span className={labelClassName}>{item.title}</span>
+          {hasChildren && <ChevronDown aria-hidden="true" strokeWidth={2.6} className={iconClassName} />}
         </a>
       ) : (
         <Link to={item.url} className={itemClassName}>
-          <span>{item.title}</span>
-          {hasChildren && <span aria-hidden="true">v</span>}
+          <span className={labelClassName}>{item.title}</span>
+          {hasChildren && <ChevronDown aria-hidden="true" strokeWidth={2.6} className={iconClassName} />}
         </Link>
       )}
 
       {hasChildren && (
         <ul
-          className={`flex flex-col min-w-[220px] bg-[#1f3769] border border-[#284884] rounded-none shadow-xl z-30 transition-all duration-500 ease-out ${
-            isTopLevel ? 'absolute left-0 top-full mt-3' : 'absolute left-full top-0 ml-3'
+          className={`px-4 py-2 flex flex-col min-w-[220px] bg-[#1f3769] border border-[#284884] rounded-xl shadow-xl z-30 transition-all duration-500 ease-out ${
+            isTopLevel ? 'absolute left-1/2 top-full mt-3 -translate-x-1/2' : 'absolute left-full top-0 ml-3'
           } ${
             isOpen
               ? 'opacity-100 visible translate-y-0 scale-100 pointer-events-auto'
@@ -288,6 +295,10 @@ export function HeroSlider() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const hoverResetTimeoutRef = useRef<number | null>(null);
+  const heroNavViewportRef = useRef<HTMLDivElement | null>(null);
+  const heroNavTrackRef = useRef<HTMLUListElement | null>(null);
+  const [heroNavOffset, setHeroNavOffset] = useState(0);
+  const [heroNavMaxOffset, setHeroNavMaxOffset] = useState(0);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -366,6 +377,36 @@ export function HeroSlider() {
   };
 
   const visibleHeroNavTree = filterVisibleHeroNavTree(heroNavTree, user?.role?.type ?? null);
+  const canScrollHeroNavLeft = heroNavOffset > 1;
+  const canScrollHeroNavRight = heroNavOffset < heroNavMaxOffset - 1;
+
+  const recalculateHeroNavBounds = () => {
+    const viewport = heroNavViewportRef.current;
+    const track = heroNavTrackRef.current;
+
+    if (!viewport || !track) {
+      setHeroNavOffset(0);
+      setHeroNavMaxOffset(0);
+      return;
+    }
+
+    const maxOffset = Math.max(track.scrollWidth - viewport.clientWidth, 0);
+    setHeroNavMaxOffset(maxOffset);
+    setHeroNavOffset((previousOffset) => Math.min(previousOffset, maxOffset));
+  };
+
+  const scrollHeroNav = (direction: 'left' | 'right') => {
+    const viewport = heroNavViewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    const step = Math.max(viewport.clientWidth * 0.72, 180);
+    setHeroNavOffset((previousOffset) => {
+      const nextOffset = direction === 'left' ? previousOffset - step : previousOffset + step;
+      return Math.min(Math.max(nextOffset, 0), heroNavMaxOffset);
+    });
+  };
 
   useEffect(() => {
     setLoadedImages({});
@@ -386,6 +427,17 @@ export function HeroSlider() {
   }, [currentIndex, slides.length]);
 
   useEffect(() => {
+    recalculateHeroNavBounds();
+
+    const handleResize = () => recalculateHeroNavBounds();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [visibleHeroNavTree.length]);
+
+  useEffect(() => {
     if (!isAutoPlay || slides.length <= 1) return;
 
     const interval = setInterval(() => {
@@ -399,14 +451,6 @@ export function HeroSlider() {
     setCurrentIndex(index);
     setIsAutoPlay(false);
     setTimeout(() => setIsAutoPlay(true), 9000);
-  };
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   if (isLoading) {
@@ -450,39 +494,54 @@ export function HeroSlider() {
         </h1>
 
         {/* SPACE */}
-        <div className="h-10 md:h-16" />
+        <div className="h-10 md:h-10" />
 
         {/* HERO NAV */}
-        <ul className="flex flex-wrap justify-center gap-3 md:gap-5" onMouseLeave={resetHeroNavPath}>
-          {visibleHeroNavTree.map((item) => (
-            <HeroNavMenuNode
-              key={`${item.title}-${item.url}`}
-              item={item}
-              path={[]}
-              activePath={activeHeroNavPath}
-              onActivatePath={activateHeroNavPath}
-            />
-          ))}
-        </ul>
+        <div className="w-full flex items-center justify-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => scrollHeroNav('left')}
+            disabled={!canScrollHeroNavLeft}
+            aria-label="Scroll menus left"
+            className="h-10 w-10 md:h-11 md:w-11 rounded-full border border-white/30 bg-white/15 backdrop-blur-xl text-white inline-flex items-center justify-center transition-all duration-300 hover:bg-white/30 hover:border-white/60 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div
+            ref={heroNavViewportRef}
+            className="w-[55vw] md:w-[50vw] overflow-x-clip overflow-y-visible"
+            style={{ marginInline: 'max(16px, 5vw)' }}
+          >
+            <ul
+              ref={heroNavTrackRef}
+              className="flex min-w-max flex-nowrap justify-start gap-2 sm:gap-3 md:gap-3 px-1 py-1"
+              style={{ transform: `translateX(-${heroNavOffset}px)`, transition: 'transform 300ms ease' }}
+              onMouseLeave={resetHeroNavPath}
+            >
+              {visibleHeroNavTree.map((item) => (
+                <HeroNavMenuNode
+                  key={`${item.title}-${item.url}`}
+                  item={item}
+                  path={[]}
+                  activePath={activeHeroNavPath}
+                  onActivatePath={activateHeroNavPath}
+                />
+              ))}
+            </ul>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => scrollHeroNav('right')}
+            disabled={!canScrollHeroNavRight}
+            aria-label="Scroll menus right"
+            className="h-10 w-10 md:h-11 md:w-11 rounded-full border border-white/30 bg-white/15 backdrop-blur-xl text-white inline-flex items-center justify-center transition-all duration-300 hover:bg-white/30 hover:border-white/60 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </motion.div>
-
-      {/* LEFT BUTTON */}
-      <button
-        onClick={prevSlide}
-        disabled={slides.length <= 1}
-        className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 rounded-full p-3 text-white"
-      >
-        <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
-      </button>
-
-      {/* RIGHT BUTTON */}
-      <button
-        onClick={nextSlide}
-        disabled={slides.length <= 1}
-        className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 rounded-full p-3 text-white"
-      >
-        <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
-      </button>
 
       {/* DOTS */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">

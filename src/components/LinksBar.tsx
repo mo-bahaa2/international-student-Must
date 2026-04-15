@@ -22,7 +22,7 @@ export function LinksBar({ className = '' }: LinksBarProps) {
           key={link.id}
           to={`/${link.id}`}
           className={({ isActive }) => 
-            `text-white text-lg font-medium hover:text-green-400 transition-colors duration-300 px-4 py-2 border-none bg-transparent cursor-pointer no-underline ${
+            `text-white text-lg font-bold hover:text-green-400 transition-colors duration-300 px-4 py-2 border-none bg-transparent cursor-pointer no-underline ${
               isActive ? 'text-green-400 ring-2 ring-green-400/50 rounded-md' : ''
             }`
           }
