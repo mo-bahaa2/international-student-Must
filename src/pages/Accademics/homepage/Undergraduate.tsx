@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import NewStudyPlanResources from '../../../components/NewStudyPlanResources';
 import { undergradStudyPlanConfig } from '../../../components/newStudyPlanResourcesMockData';
 
@@ -56,7 +57,15 @@ export default function Undergraduate() {
   return (
     <div className="py-24 bg-white min-h-screen dark:bg-[#070d19]">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8">
-        <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-8">Undergraduate Studies</h1>
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100">Undergraduate Studies</h1>
+          <Link
+            to="/formation-of-college-council"
+            className="text-sm font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+          >
+            Formation of College Council
+          </Link>
+        </div>
         {isLoading ? <div className="animate-pulse text-emerald-600 dark:text-emerald-400">Loading Plans...</div> : <NewStudyPlanResources config={config} />}
       </div>
     </div>

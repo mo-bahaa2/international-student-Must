@@ -10,6 +10,7 @@ import { ChatPanel } from './components/Chat/ChatPanel';
 // Pages
 import { Academics } from "./pages/Accademics/Academics";
 import Undergraduate from "./pages/Accademics/homepage/Undergraduate";
+import FormationOfCollegeCouncil from "./pages/Accademics/homepage/FormationOfCollegeCouncil";
 import Postgraduate from "./pages/Accademics/homepage/Postgraduate";
 import Schedules from "./pages/Accademics/homepage/Schedules";
 import Questionnaires from './pages/Questionnaires';
@@ -79,6 +80,7 @@ function AppContent() {
               {/* --- CUSTOM COLLECTION ROUTES --- */}
               <Route path="/academics" element={<Academics />} />
               <Route path="/undergraduate" element={<Undergraduate />} />
+              <Route path="/formation-of-college-council" element={<FormationOfCollegeCouncil />} />
               <Route path="/postgraduate" element={<Postgraduate />} />
               <Route path="/schedules" element={<Schedules />} />
               <Route path="/news" element={<News />} />

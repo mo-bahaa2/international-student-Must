@@ -7,6 +7,8 @@ import NewStudyPlanResources from '../components/NewStudyPlanResources';
 import { postgradStudyPlanConfig, undergradStudyPlanConfig } from '../components/newStudyPlanResourcesMockData';
 import ResourcesComponent from '../components/ResourcesComponent';
 import { mockGenericReources } from '../components/genericResourcesMockData';
+import { PlaygroundVideo } from '../components/PlaygroundVideo';
+import { playgroundVideoItems, videoSrc } from '../data/playgroundVideos';
 
 export default function Playground() {
   const [staffList, setStaffList] = useState<AcademicStaffProfileCardProps[]>([]);
@@ -17,14 +19,6 @@ export default function Playground() {
   const [undergradConfig, setUndergradConfig] = useState<any>(undergradStudyPlanConfig);
   const [postgradConfig, setPostgradConfig] = useState<any>(postgradStudyPlanConfig);
   
-  // NEW: State for live Schedule links
-  const [scheduleLinks, setScheduleLinks] = useState({
-    semester: '#',
-    quiz1: '#',
-    quiz2: '#',
-    finals: '#'
-  });
-
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,21 +26,18 @@ export default function Playground() {
       try {
         const baseUrl = import.meta.env.VITE_CMS_URL || import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
         
-        // Concurrent fetch for ALL collections including schedules
-        const [staffRes, eventsRes, newsRes, studyPlansRes, schedulesRes] = await Promise.all([
+        const [staffRes, eventsRes, newsRes, studyPlansRes] = await Promise.all([
           fetch(`${baseUrl}/api/academic-staffs?populate=*`),
           fetch(`${baseUrl}/api/events?populate=*`),
           fetch(`${baseUrl}/api/news-items?populate=*`),
           fetch(`${baseUrl}/api/study-plans?populate=*`),
-          fetch(`${baseUrl}/api/schedules?populate=*`)
         ]);
 
-        const [staffJson, eventsJson, newsJson, studyPlansJson, schedulesJson] = await Promise.all([
+        const [staffJson, eventsJson, newsJson, studyPlansJson] = await Promise.all([
           staffRes.json(),
           eventsRes.json(),
           newsRes.json(),
           studyPlansRes.json(),
-          schedulesRes.json()
         ]);
 
         // Helper function moved to top of try block so all sections can use it
@@ -121,18 +112,7 @@ export default function Playground() {
           setNewsList(formattedNews);
         }
 
-        // 4. Format Schedules (NEW LIVE DATA)
-        if (schedulesJson.data && schedulesJson.data.length > 0) {
-          const sAttrs = schedulesJson.data[0].attributes || schedulesJson.data[0];
-          setScheduleLinks({
-            semester: getFileUrl(sAttrs.T_undergrad_semester_schedule),
-            quiz1: getFileUrl(sAttrs.IT_undergrad_quiz_1_schedule),
-            quiz2: getFileUrl(sAttrs.IT_undergrad_quiz_2_schedule),
-            finals: getFileUrl(sAttrs.IT_undergrad_finals_schedule)
-          });
-        }
-
-        // 5. Format Study Plans
+        // 4. Format Study Plans
         if (studyPlansJson.data && studyPlansJson.data.length > 0) {
           const attrs = studyPlansJson.data[0].attributes || studyPlansJson.data[0];
 
@@ -224,6 +204,18 @@ export default function Playground() {
           Live preview of the Collections loaded from the Strapi Backend.
         </p>
 
+        <div className="mb-10 space-y-10">
+          <h2 className="text-lg font-semibold text-slate-200">Help videos</h2>
+          {playgroundVideoItems.map((item) => (
+            <PlaygroundVideo
+              key={item.fileName}
+              src={videoSrc(item.fileName)}
+              title={item.title}
+              caption={item.caption}
+            />
+          ))}
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center p-8 text-emerald-400 text-xl font-medium animate-pulse">
             Loading Data from Strapi...
@@ -251,12 +243,7 @@ export default function Playground() {
 
       {/* --- LIVE SCHEDULES SECTION --- */}
       <div className="mt-12">
-        <Schedules 
-          semesterUrl={scheduleLinks.semester}
-          quiz1Url={scheduleLinks.quiz1}
-          quiz2Url={scheduleLinks.quiz2}
-          finalsUrl={scheduleLinks.finals}
-        />
+        <Schedules />
       </div>
 
       {/* --- Dynamic Study Plans Section --- */}
