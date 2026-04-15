@@ -226,3 +226,33 @@ export interface StrapiError {
     }>;
   };
 }
+
+export interface StrapiListItem {
+  id: number;
+  value: string;
+}
+
+export interface StrapiExperience {
+  id: number;
+  title: string;
+  period: string;
+  description: string;
+}
+
+export interface StrapiAcademicStaff {
+  name: string;
+  role: string;
+  specialty?: string;
+  email?: string;
+  bio?: string;
+  cvLabel?: string;
+  qualifications?: StrapiListItem[];
+  researchDirections?: StrapiListItem[];
+  experience?: StrapiExperience[];
+  avatar?: {
+    data?: { attributes: { url: string } };
+  };
+  cvDocument?: {
+    data?: { attributes: { url: string } };
+  };
+}

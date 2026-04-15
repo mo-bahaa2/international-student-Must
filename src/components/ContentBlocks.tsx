@@ -34,7 +34,30 @@ interface ContentBlockProps {
 
 function ContentBlock({ block }: ContentBlockProps) {
   const component = block.__component;
-  const safeContent = component === 'shared.rich-text' ? sanitizeHtml(block.body) : '';
+  const safeContent = component === 'shared.rich-text' ? normalizeSharePointVideoLinks(sanitizeHtml(block.body)) : '';
+
+  const isSharePointVideoUrl = (url: string) => url.startsWith('https://mustedueg.sharepoint.com/');
+
+  const parseSharePointVideoUrl = (url: string): { href: string; title: string | null } => {
+    const titleFromRaw = url.match(/\(([^()]+)\)\s*$/)?.[1]?.trim();
+    const hrefWithoutRawSuffix = url
+      .replace(/\([^()]+\)\s*$/, '')
+      .replace(/%28.*%29\s*$/i, '');
+
+    let title = titleFromRaw || null;
+
+    if (!title) {
+      try {
+        const decoded = decodeURIComponent(url);
+        title = decoded.match(/\(([^()]+)\)\s*$/)?.[1]?.trim() || null;
+      } catch {
+        title = null;
+      }
+    }
+
+    return { href: hrefWithoutRawSuffix, title };
+  };
+
   const renderHeading = (Tag: 'h1' | 'h2' | 'h3', className: string) => {
     return ({ children, ...props }: any) => {
       const text = getTextContent(children);
@@ -52,7 +75,64 @@ function ContentBlock({ block }: ContentBlockProps) {
     ul: (props: any) => <ul className="list-disc pl-6 mb-4 space-y-2 text-base md:text-lg text-gray-800 dark:text-gray-200" {...props} />,
     ol: (props: any) => <ol className="list-decimal pl-6 mb-4 space-y-2 text-base md:text-lg text-gray-800 dark:text-gray-200" {...props} />,
     li: (props: any) => <li className="leading-7" {...props} />,
-    a: (props: any) => <a className="text-green-700 dark:text-green-400 underline hover:opacity-80" {...props} />,
+    a: ({ href, children, ...props }: any) => {
+      const url = typeof href === 'string' ? href : '';
+
+      if (url && isSharePointVideoUrl(url)) {
+        const { href: cleanedHref, title } = parseSharePointVideoUrl(url);
+        const displayTitle = title || 'Video';
+
+        return (
+          <a
+            href={cleanedHref}
+            target="_blank"
+            rel="noreferrer"
+            className="my-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 no-underline text-sky-700 hover:opacity-80 dark:border-slate-700 dark:bg-slate-900 dark:text-sky-300"
+            {...props}
+          >
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-6 w-6"
+                aria-hidden="true"
+              >
+                <rect x="3.5" y="5" width="12.5" height="14" rx="2" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 12 8.5 10.5v3L11 12Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="m16 10 4-2v8l-4-2" />
+              </svg>
+            </span>
+
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold underline break-words text-gray-900 dark:text-gray-100">
+                {displayTitle}
+              </span>
+            </span>
+
+            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-gray-500 dark:text-gray-300">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5h5v5" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 14 19 5" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" />
+              </svg>
+            </span>
+          </a>
+        );
+      }
+
+      return <a href={href} className="text-green-700 dark:text-green-400 underline hover:opacity-80" {...props}>{children}</a>;
+    },
     table: ({ children }: any) => (
       <div className="my-6 overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700">
         <table className="min-w-full text-left text-sm md:text-base">{children}</table>
@@ -219,6 +299,21 @@ function sanitizeHtml(html: string): string {
   let sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   sanitized = sanitized.replace(/on\w+\s*=\s*['"]/gi, 'data-event="');
   return sanitized;
+}
+
+function normalizeSharePointVideoLinks(content: string): string {
+  return content.replace(/https:\/\/mustedueg\.sharepoint\.com\/[^\n\r]*?\(([^)]+)\)/gi, (rawUrl, title) => {
+    const cleanedTitle = String(title || '').trim();
+
+    if (!cleanedTitle) {
+      return rawUrl;
+    }
+
+    const baseUrl = rawUrl.replace(/\(([^)]+)\)\s*$/, '');
+    const encodedTitle = encodeURIComponent(cleanedTitle);
+
+    return `${baseUrl}%28${encodedTitle}%29`;
+  });
 }
 
 function getTextContent(node: any): string {

@@ -1,8 +1,9 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 
 interface EventCardItem {
   id: string;
   imageUrl: string;
+  imageUrls?: string[];
   imageAlt?: string;
   day: string;
   month: string;
@@ -15,6 +16,7 @@ interface EventCardItem {
 interface NewsCardItem {
   id: string;
   imageUrl: string;
+  imageUrls?: string[];
   imageAlt?: string;
   title: string;
   description: string;
@@ -30,161 +32,85 @@ interface NewsCarouselProps {
   news: NewsCardItem[];
 }
 
-interface EventsNewsSectionProps {
-  events: EventCardItem[];
-  news: NewsCardItem[];
-  onSeeAllEvents?: () => void;
-}
-
-interface CarouselHeaderProps {
-  title: string;
-  onPrev: () => void;
-  onNext: () => void;
-}
-
-const scrollStep = 360;
-
-function CarouselHeader({ title, onPrev, onNext }: CarouselHeaderProps) {
-  return (
-    <div className="mb-6 flex items-center justify-between gap-4">
-      <h2 className="text-center text-3xl font-bold text-emerald-400 sm:text-left">{title}</h2>
-
-      <div className="hidden items-center gap-2 sm:flex">
-        <button
-          type="button"
-          aria-label={`Previous ${title}`}
-          onClick={onPrev}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-navy-600 bg-navy-900 text-slate-200 transition-colors hover:border-emerald-500 hover:text-emerald-300"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          aria-label={`Next ${title}`}
-          onClick={onNext}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-navy-600 bg-navy-900 text-slate-200 transition-colors hover:border-emerald-500 hover:text-emerald-300"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function RelatedEventsCarousel({ events, onSeeAllEvents }: RelatedEventsCarouselProps) {
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollByAmount = (amount: number) => {
-    if (!scrollContainerRef.current) {
-      return;
-    }
-
-    scrollContainerRef.current.scrollBy({
-      left: amount,
-      behavior: 'smooth',
-    });
-  };
-
   return (
     <section className="w-full">
-      <CarouselHeader
-        title="Related Events"
-        onPrev={() => scrollByAmount(-scrollStep)}
-        onNext={() => scrollByAmount(scrollStep)}
-      />
-
-      <div
-        ref={scrollContainerRef}
-        className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-      >
+      {/* CHANGED: xl:grid-cols-3 and increased gap so cards are wider */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 pb-12">
         {events.map((item) => (
           <article
             key={item.id}
-            className="group min-w-[280px] max-w-[280px] snap-start"
+            className="group w-full flex flex-col rounded-2xl border border-slate-200 bg-white transition-all duration-300 overflow-hidden shadow-sm hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-navy-700 dark:bg-navy-800/40"
           >
-            <a href={item.href || '#'} className="block">
-              <div className="relative overflow-hidden rounded-sm bg-navy-800">
-                <img
-                  src={item.imageUrl}
-                  alt={item.imageAlt || item.title}
-                  className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            <a href={item.href || '#'} className="block flex-1 flex flex-col">
+              {/* CHANGED: Image height from 280px to 360px */}
+              <div className="relative overflow-hidden bg-slate-100 h-[360px] dark:bg-navy-800">
+                <CardImageSlider
+                  imageUrls={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl]}
+                  imageAlt={item.imageAlt || item.title}
+                  keyPrefix={item.id}
                 />
 
-                <div className="absolute bottom-0 left-3 translate-y-1/2 rounded-md bg-[#162e67] px-4 py-2 text-center shadow-lg">
-                  <p className="text-4xl font-bold leading-none text-slate-100">{item.day}</p>
-                  <p className="mt-1 text-sm text-slate-300">{item.month}</p>
+                <div className="absolute bottom-5 left-5 rounded-xl border border-slate-200 bg-white/95 px-6 py-4 text-center shadow-2xl backdrop-blur-sm dark:border-navy-600 dark:bg-navy-900/90">
+                  <p className="text-5xl font-black leading-none text-slate-900 dark:text-white">{item.day}</p>
+                  <p className="mt-1 text-base font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{item.month}</p>
                 </div>
               </div>
 
-              <div className="pt-8">
-                <p className="mb-3 flex items-center gap-2 text-sm text-slate-400">
-                  <ClockIcon className="h-4 w-4 text-emerald-500" />
+              <div className="p-8 flex-1 flex flex-col">
+                <p className="mb-4 flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  <ClockIcon className="h-4 w-4" />
                   {item.timeRange}
                 </p>
-                <h3 className="line-clamp-2 text-xl font-bold text-slate-100">{item.title}</h3>
-                <p className="mt-2 line-clamp-2 text-base text-slate-400">{item.description}</p>
+                <h3 className="line-clamp-2 mb-4 text-3xl font-bold text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-300">{item.title}</h3>
+                <p className="line-clamp-3 flex-1 text-xl leading-relaxed text-slate-600 dark:text-slate-400">{item.description}</p>
               </div>
             </a>
           </article>
         ))}
       </div>
 
-      <div className="mt-8 flex justify-center">
-        <button
-          type="button"
-          onClick={onSeeAllEvents}
-          className="rounded-full bg-emerald-600 px-12 py-3 text-lg font-semibold text-white transition-colors hover:bg-emerald-500"
-        >
-          See All Events
-        </button>
-      </div>
+      {onSeeAllEvents && (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={onSeeAllEvents}
+            className="rounded-full bg-emerald-600 px-12 py-4 text-lg font-bold text-white transition-all hover:bg-emerald-500"
+          >
+            See All Events
+          </button>
+        </div>
+      )}
     </section>
   );
 }
 
 export function NewsCarousel({ news }: NewsCarouselProps) {
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollByAmount = (amount: number) => {
-    if (!scrollContainerRef.current) {
-      return;
-    }
-
-    scrollContainerRef.current.scrollBy({
-      left: amount,
-      behavior: 'smooth',
-    });
-  };
-
   return (
     <section className="w-full">
-      <CarouselHeader
-        title="News"
-        onPrev={() => scrollByAmount(-scrollStep)}
-        onNext={() => scrollByAmount(scrollStep)}
-      />
-
-      <div
-        ref={scrollContainerRef}
-        className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-      >
+      {/* CHANGED: xl:grid-cols-3 and increased gap so cards are wider */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 pb-12">
         {news.map((item) => (
           <article
             key={item.id}
-            className="group min-w-[320px] max-w-[320px] snap-start"
+            className="group w-full flex flex-col rounded-2xl border border-slate-200 bg-white transition-all duration-300 overflow-hidden shadow-sm hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10 dark:border-navy-700 dark:bg-navy-800/40"
           >
-            <a href={item.href || '#'} className="block">
-              <div className="overflow-hidden rounded-sm bg-navy-800">
-                <img
-                  src={item.imageUrl}
-                  alt={item.imageAlt || item.title}
-                  className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            <a href={item.href || '#'} className="block flex-1 flex flex-col">
+              {/* CHANGED: Image height from 280px to 360px */}
+              <div className="overflow-hidden bg-slate-100 h-[360px] dark:bg-navy-800">
+                <CardImageSlider
+                  imageUrls={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl]}
+                  imageAlt={item.imageAlt || item.title}
+                  keyPrefix={item.id}
                 />
               </div>
 
-              <div className="pt-5">
-                <h3 className="line-clamp-3 text-2xl font-bold leading-8 text-slate-100">{item.title}</h3>
-                <p className="mt-2 line-clamp-2 text-base text-slate-400">{item.description}</p>
+              <div className="p-8 flex-1 flex flex-col">
+                <div className="mb-5">
+                   <span className="inline-block rounded-full border border-blue-300 bg-blue-100 px-4 py-1.5 text-sm font-bold uppercase tracking-wider text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300">News</span>
+                </div>
+                <h3 className="line-clamp-3 mb-4 text-3xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">{item.title}</h3>
+                <p className="line-clamp-3 flex-1 text-xl leading-relaxed text-slate-600 dark:text-slate-400">{item.description}</p>
               </div>
             </a>
           </article>
@@ -194,12 +120,87 @@ export function NewsCarousel({ news }: NewsCarouselProps) {
   );
 }
 
-export default function EventsNewsSection({ events, news, onSeeAllEvents }: EventsNewsSectionProps) {
+function CardImageSlider({
+  imageUrls,
+  imageAlt,
+  keyPrefix,
+}: {
+  imageUrls: string[];
+  imageAlt: string;
+  keyPrefix: string;
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const hasMultipleImages = imageUrls.length > 1;
+
+  const goPrev = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveIndex((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
+  };
+
+  const goNext = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveIndex((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
+  };
+
   return (
-    <section className="w-full bg-[#0a111f] py-16">
-      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8 lg:px-10">
+    <div className="relative h-full w-full">
+      <img
+        src={imageUrls[activeIndex]}
+        alt={imageAlt}
+        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+
+      {hasMultipleImages && (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label="Previous image"
+            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="Next image"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
+          >
+            <span aria-hidden="true">›</span>
+          </button>
+
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+            {imageUrls.map((_, index) => (
+              <button
+                key={`${keyPrefix}-${index}`}
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setActiveIndex(index);
+                }}
+                aria-label={`Go to image ${index + 1}`}
+                className={`h-2 w-2 rounded-full ${index === activeIndex ? 'bg-white' : 'bg-white/50'}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function EventsNewsSection({ events, news, onSeeAllEvents }: { events: EventCardItem[], news: NewsCardItem[], onSeeAllEvents?: () => void }) {
+  return (
+    <section className="w-full bg-slate-50 py-16 dark:bg-[#0a111f]">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-10">
+        <h2 className="mb-10 text-4xl font-bold text-emerald-700 dark:text-emerald-400">Related Events</h2>
         <RelatedEventsCarousel events={events} onSeeAllEvents={onSeeAllEvents} />
-        <div className="mt-14">
+        
+        <div className="mt-24">
+          <h2 className="mb-10 text-4xl font-bold text-blue-700 dark:text-blue-400">Latest News</h2>
           <NewsCarousel news={news} />
         </div>
       </div>
@@ -209,50 +210,9 @@ export default function EventsNewsSection({ events, news, onSeeAllEvents }: Even
 
 function ClockIcon({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5v5l3.5 2" />
     </svg>
   );
 }
-
-function ChevronLeft({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className={className}
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
-    </svg>
-  );
-}
-
-function ChevronRight({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className={className}
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
-    </svg>
-  );
-}
-
