@@ -142,7 +142,7 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
     setActiveCurriculum(null);
   };
 
-  const tileButtonBase = 'rounded-2xl border px-6 py-6 text-left transition-colors';
+  const tileButtonBase = 'group flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-100 bg-white p-10 text-center shadow-[0px_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0px_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 dark:shadow-[0px_4px_20px_rgba(0,0,0,0.2)] dark:hover:border-slate-700 dark:hover:bg-slate-800';
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm md:p-10 dark:border-slate-700 dark:bg-slate-900">
@@ -173,9 +173,10 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
                     setActiveTrack(trackKey);
                     setActiveSpecialty(null);
                   }}
-                  className={`${tileButtonBase} border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500`}
+                  className={tileButtonBase}
                 >
-                  <p className="text-2xl font-semibold">{track.label}</p>
+                  <i className="fa-brands fa-google-drive text-[40px] text-[#00A152] transition-transform duration-300 group-hover:scale-110 dark:text-[#00c968]"></i>
+                  <p className="mt-2 text-xl font-bold text-[#0A2540] transition-colors duration-300 group-hover:text-[#00A152] dark:text-white dark:group-hover:text-[#00c968]">{track.label}</p>
                 </button>
               );
             })}
@@ -193,11 +194,12 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
                   aria-pressed={isActive}
                   className={`${tileButtonBase} ${
                     isActive
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500'
+                      ? 'ring-2 ring-[#00A152] bg-slate-50 dark:bg-slate-800/80'
+                      : ''
                   }`}
                 >
-                  <p className="text-2xl font-semibold">{specialtyLabel}</p>
+                  <i className="fa-brands fa-google-drive text-[40px] text-[#00A152] transition-transform duration-300 group-hover:scale-110 dark:text-[#00c968]"></i>
+                  <p className="mt-2 text-xl font-bold text-[#0A2540] transition-colors duration-300 group-hover:text-[#00A152] dark:text-white dark:group-hover:text-[#00c968]">{specialtyLabel}</p>
                 </button>
               );
             })}
@@ -218,9 +220,10 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
                     setActiveUndergradSpecialty(specialtyKey);
                     setActiveCurriculum(null);
                   }}
-                  className={`${tileButtonBase} border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500`}
+                  className={tileButtonBase}
                 >
-                  <p className="text-2xl font-semibold">{specialty.label}</p>
+                  <i className="fa-brands fa-google-drive text-[40px] text-[#00A152] transition-transform duration-300 group-hover:scale-110 dark:text-[#00c968]"></i>
+                  <p className="mt-2 text-xl font-bold text-[#0A2540] transition-colors duration-300 group-hover:text-[#00A152] dark:text-white dark:group-hover:text-[#00c968]">{specialty.label}</p>
                 </button>
               );
             })}
@@ -238,11 +241,12 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
                   aria-pressed={isActive}
                   className={`${tileButtonBase} ${
                     isActive
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500'
+                      ? 'ring-2 ring-[#00A152] bg-slate-50 dark:bg-slate-800/80'
+                      : ''
                   }`}
                 >
-                  <p className="text-2xl font-semibold">{label}</p>
+                  <i className="fa-brands fa-google-drive text-[40px] text-[#00A152] transition-transform duration-300 group-hover:scale-110 dark:text-[#00c968]"></i>
+                  <p className="mt-2 text-xl font-bold text-[#0A2540] transition-colors duration-300 group-hover:text-[#00A152] dark:text-white dark:group-hover:text-[#00c968]">{label}</p>
                 </button>
               );
             })}
@@ -277,21 +281,37 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
             }
 
             return (
-              <a
+              <div
                 key={resource.id}
-                href={resource.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-6 text-green-700 transition-opacity hover:opacity-80 dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300"
+                className="flex flex-col gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
               >
-                <span className="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-                  <PdfIcon className="h-8 w-8" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xl font-semibold underline break-words text-slate-900 dark:text-slate-100">{resource.title}</p>
-                  <p className="text-base text-gray-600 dark:text-slate-400">Download PDF resource</p>
+                <div className="flex-1 pb-4 border-b border-slate-100 dark:border-slate-700/50">
+                  <h4 className="text-xl font-semibold text-[#0A2540] dark:text-white">
+                    {resource.title}
+                  </h4>
                 </div>
-              </a>
+                
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider -mb-1 mt-1 dark:text-slate-400">PDF</p>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <a
+                    href={resource.url}
+                    download
+                    className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-[#25325A] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1A2340] dark:bg-[#34467c] dark:hover:bg-[#2c3d6c]"
+                  >
+                    <i className="fa-solid fa-download text-lg"></i>
+                    Download PDF
+                  </a>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg border-2 border-[#25325A] bg-white px-6 py-3 text-sm font-semibold text-[#25325A] transition-colors hover:bg-slate-50 dark:border-slate-400 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                  >
+                    <i className="fa-solid fa-arrow-up-right-from-square text-lg"></i>
+                    Open PDF
+                  </a>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -300,27 +320,6 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
   );
 }
 
-function PdfIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M14.5 3.75H7.5A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5V8.25L14.5 3.75Z"
-      />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 3.75v4.5h4.5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.75 14.25h6.5M8.75 16.75h4M8.75 11.75h6.5" />
-    </svg>
-  );
-}
 
 function VideoIcon({ className }: { className?: string }) {
   return (
@@ -357,3 +356,5 @@ function ExternalLinkIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+

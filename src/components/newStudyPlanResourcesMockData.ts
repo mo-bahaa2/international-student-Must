@@ -52,10 +52,10 @@ export const undergradStudyPlanConfig: StudyPlanResourceConfigUnion = {
       label: 'Computer Science',
       resourcesByCurriculum: {
         old: [
-          { id: 'ug-cs-old-1', title: 'Computer Science - Old Curriculum', url: '/accademics/study-plans/ug-cs-old-level-1.pdf' },
+          { id: 'ug-cs-old-1', title: 'Old CS Program', url: '/drive_folder/Old%20CS%20Program.pdf' },
         ],
         new: [
-          { id: 'ug-cs-new-1', title: 'Computer Science - New Curriculum', url: '/accademics/study-plans/ug-cs-new-level-1.pdf' },
+          { id: 'ug-cs-new-1', title: 'NEW CS Program', url: '/drive_folder/NEW%20CS%20Program.pdf' },
         ],
       },
     },
