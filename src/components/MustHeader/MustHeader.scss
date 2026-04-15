@@ -75,9 +75,9 @@ $header-height: 105px;
           display: flex;
           align-items: center;
           height: 100%;
-          padding: 0 20px; 
+          padding: 0 14px; 
           color: $text-white;
-          font-size: 16px; 
+          font-size: 15px; 
           font-weight: 700; 
           text-decoration: none;
           transition: all 0.2s ease;
@@ -270,7 +270,7 @@ $header-height: 105px;
   .header-controls {
     display: flex;
     align-items: center;
-    gap: 15px; 
+    gap: 10px; 
 
     @media (max-width: 768px) {
       gap: 8px;
@@ -330,12 +330,12 @@ $header-height: 105px;
       color: $text-white;
       padding: 8px 16px;
       border-radius: 20px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.2s ease;
 
       span {
@@ -361,6 +361,10 @@ $header-height: 105px;
           box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
       }
+    }
+
+    .btn-auth + .btn-auth {
+      margin-inline-start: 4px !important;
     }
   }
 }
