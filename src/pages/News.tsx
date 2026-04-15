@@ -10,20 +10,58 @@ export default function NewsPage() {
         const baseUrl = import.meta.env.VITE_CMS_URL || import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
         const res = await fetch(`${baseUrl}/api/news-items?populate=*`);
         const json = await res.json();
+
+        const toAbsoluteUrl = (path: string) =>
+          path.startsWith('http') ? path : `${baseUrl}${path}`;
+
+        const extractImageUrls = (...mediaFields: any[]): string[] => {
+          const urls: string[] = [];
+
+          const appendIfValid = (value: any) => {
+            const path = value?.url || value?.attributes?.url;
+            if (typeof path === 'string' && path.length > 0) {
+              urls.push(toAbsoluteUrl(path));
+            }
+          };
+
+          mediaFields.forEach((mediaField) => {
+            if (!mediaField) {
+              return;
+            }
+
+            if (Array.isArray(mediaField)) {
+              mediaField.forEach(appendIfValid);
+              return;
+            }
+
+            if (Array.isArray(mediaField.data)) {
+              mediaField.data.forEach(appendIfValid);
+              return;
+            }
+
+            appendIfValid(mediaField.data || mediaField);
+          });
+
+          return Array.from(new Set(urls));
+        };
         
         if (json.data) {
-          setNewsList(json.data.map((item: any) => {
-            const attrs = item.attributes || item;
-            const media = attrs.imageUrl || attrs.image;
-            const imagePath = media?.url || media?.data?.attributes?.url;
-            return {
-              id: item.id.toString(),
-              title: attrs.title,
-              description: attrs.description,
-              href: attrs.href || '#',
-              imageUrl: imagePath ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`) : '/accademics/news/news-1.jpg'
-            };
-          }));
+          setNewsList(
+            json.data.map((item: any) => {
+              const attrs = item.attributes || item;
+              const imageUrls = extractImageUrls(attrs.imageUrl, attrs.image, attrs.images, attrs.gallery);
+              const fallbackUrls = imageUrls.length > 0 ? imageUrls : ['/accademics/news/news-1.jpg'];
+
+              return {
+                id: item.id.toString(),
+                title: attrs.title,
+                description: attrs.description,
+                href: attrs.href || '#',
+                imageUrl: fallbackUrls[0],
+                imageUrls: fallbackUrls,
+              };
+            })
+          );
         }
       } catch (error) {
         console.error("Error fetching news:", error);

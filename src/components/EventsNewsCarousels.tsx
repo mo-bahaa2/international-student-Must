@@ -1,6 +1,9 @@
+import { useState } from 'react';
+
 interface EventCardItem {
   id: string;
   imageUrl: string;
+  imageUrls?: string[];
   imageAlt?: string;
   day: string;
   month: string;
@@ -13,6 +16,7 @@ interface EventCardItem {
 interface NewsCardItem {
   id: string;
   imageUrl: string;
+  imageUrls?: string[];
   imageAlt?: string;
   title: string;
   description: string;
@@ -41,10 +45,10 @@ export function RelatedEventsCarousel({ events, onSeeAllEvents }: RelatedEventsC
             <a href={item.href || '#'} className="block flex-1 flex flex-col">
               {/* CHANGED: Image height from 280px to 360px */}
               <div className="relative overflow-hidden bg-slate-100 h-[360px] dark:bg-navy-800">
-                <img
-                  src={item.imageUrl}
-                  alt={item.imageAlt || item.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                <CardImageSlider
+                  imageUrls={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl]}
+                  imageAlt={item.imageAlt || item.title}
+                  keyPrefix={item.id}
                 />
 
                 <div className="absolute bottom-5 left-5 rounded-xl border border-slate-200 bg-white/95 px-6 py-4 text-center shadow-2xl backdrop-blur-sm dark:border-navy-600 dark:bg-navy-900/90">
@@ -94,10 +98,10 @@ export function NewsCarousel({ news }: NewsCarouselProps) {
             <a href={item.href || '#'} className="block flex-1 flex flex-col">
               {/* CHANGED: Image height from 280px to 360px */}
               <div className="overflow-hidden bg-slate-100 h-[360px] dark:bg-navy-800">
-                <img
-                  src={item.imageUrl}
-                  alt={item.imageAlt || item.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                <CardImageSlider
+                  imageUrls={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl]}
+                  imageAlt={item.imageAlt || item.title}
+                  keyPrefix={item.id}
                 />
               </div>
 
@@ -113,6 +117,78 @@ export function NewsCarousel({ news }: NewsCarouselProps) {
         ))}
       </div>
     </section>
+  );
+}
+
+function CardImageSlider({
+  imageUrls,
+  imageAlt,
+  keyPrefix,
+}: {
+  imageUrls: string[];
+  imageAlt: string;
+  keyPrefix: string;
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const hasMultipleImages = imageUrls.length > 1;
+
+  const goPrev = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveIndex((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
+  };
+
+  const goNext = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setActiveIndex((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
+  };
+
+  return (
+    <div className="relative h-full w-full">
+      <img
+        src={imageUrls[activeIndex]}
+        alt={imageAlt}
+        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+
+      {hasMultipleImages && (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label="Previous image"
+            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="Next image"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-white hover:bg-black/70"
+          >
+            <span aria-hidden="true">›</span>
+          </button>
+
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+            {imageUrls.map((_, index) => (
+              <button
+                key={`${keyPrefix}-${index}`}
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setActiveIndex(index);
+                }}
+                aria-label={`Go to image ${index + 1}`}
+                className={`h-2 w-2 rounded-full ${index === activeIndex ? 'bg-white' : 'bg-white/50'}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
