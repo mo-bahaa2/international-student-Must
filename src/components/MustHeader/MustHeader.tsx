@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './MustHeader.scss';
 import { MENU_ITEMS, MenuItem } from './navigation.data';
 import { useAuth } from '../../context/AuthContext';
+import { ROLES } from '../../constants/roles';
 
 export interface MustHeaderProps {
   darkMode: boolean;
@@ -21,6 +22,7 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const isAdvisor = user?.role?.type === ROLES.ADMIN;
   const strapiAdminUrl = import.meta.env.VITE_STRAPI_URL
     ? `${import.meta.env.VITE_STRAPI_URL.replace(/\/$/, '')}/admin`
     : '#';
@@ -262,16 +264,18 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
               <i className={`fas ${!darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
             </button>
 
-            <a
-              href={strapiAdminUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-auth login-btn ms-2"
-              style={{ textDecoration: 'none' }}
-            >
-              <i className="fas fa-gauge-high"></i>
-              <span>Dashboard</span>
-            </a>
+            {isAdvisor && (
+              <a
+                href={strapiAdminUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-auth login-btn ms-2"
+                style={{ textDecoration: 'none' }}
+              >
+                <i className="fas fa-gauge-high"></i>
+                <span>Dashboard</span>
+              </a>
+            )}
 
             {!user ? (
               <>
@@ -412,9 +416,11 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
           </ul>
 
           <div style={{ borderTop: '1px solid #2d4278', marginTop: '12px', paddingTop: '12px' }}>
-            <a href={strapiAdminUrl} target="_blank" rel="noopener noreferrer" className="mobile-nav-link" onClick={closeMenus}>
-              Dashboard
-            </a>
+            {isAdvisor && (
+              <a href={strapiAdminUrl} target="_blank" rel="noopener noreferrer" className="mobile-nav-link" onClick={closeMenus}>
+                Dashboard
+              </a>
+            )}
             {!user ? (
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Link to="/login" className="mobile-nav-link" onClick={closeMenus}>Login</Link>

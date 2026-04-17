@@ -279,16 +279,36 @@ export function HeroSlider() {
     setTimeout(() => setIsAutoPlay(true), 9000);
   };
 
+  const goToPrevSlide = () => {
+    if (slides.length <= 1) {
+      return;
+    }
+
+    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    setIsAutoPlay(false);
+    setTimeout(() => setIsAutoPlay(true), 9000);
+  };
+
+  const goToNextSlide = () => {
+    if (slides.length <= 1) {
+      return;
+    }
+
+    setCurrentIndex((prev) => (prev + 1) % slides.length);
+    setIsAutoPlay(false);
+    setTimeout(() => setIsAutoPlay(true), 9000);
+  };
+
   if (isLoading) {
     return (
-      <div className="relative w-full h-[70vh] md:h-screen overflow-hidden bg-gray-800">
+      <div className="relative w-full h-[60vh] md:h-[86vh] overflow-hidden bg-gray-800">
         <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800" />
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-[70vh] md:h-screen overflow-visible">
+    <div className="relative w-full h-[60vh] md:h-[86vh] overflow-visible">
 
       {/* IMAGE */}
       <div className="absolute inset-0 overflow-hidden z-0">
@@ -307,6 +327,29 @@ export function HeroSlider() {
 
       {/* DARK OVERLAY */}
       <div className="absolute inset-0 bg-black/60 z-10" />
+
+      {/* PHOTO ARROWS */}
+      {slides.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={goToPrevSlide}
+            aria-label="Previous slide"
+            className="absolute left-8 md:left-14 lg:left-20 top-1/2 -translate-y-1/2 z-40 h-9 w-9 md:h-10 md:w-10 rounded-full border border-white/35 bg-black/25 text-white inline-flex items-center justify-center transition-all duration-300 hover:bg-black/45 hover:border-white/70"
+          >
+            <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={goToNextSlide}
+            aria-label="Next slide"
+            className="absolute right-8 md:right-14 lg:right-20 top-1/2 -translate-y-1/2 z-40 h-9 w-9 md:h-10 md:w-10 rounded-full border border-white/35 bg-black/25 text-white inline-flex items-center justify-center transition-all duration-300 hover:bg-black/45 hover:border-white/70"
+          >
+            <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
+          </button>
+        </>
+      )}
 
       {/* CONTENT */}
       <motion.div
