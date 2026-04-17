@@ -154,8 +154,15 @@ function buildUser(authUser: SupabaseAuthUser, profile: ProfileRow | null): Stra
 
 async function buildCurrentUser(authUser: SupabaseAuthUser): Promise<StrapiUser> {
   const studentId = getStudentIdFromAuthUser(authUser);
-  const profile = await fetchProfile(studentId);
-  return buildUser(authUser, profile);
+
+  try {
+    const profile = await fetchProfile(studentId);
+    return buildUser(authUser, profile);
+  } catch (error) {
+    // Keep auth usable even if profile table sync/read fails.
+    console.warn('Profile fetch failed, using auth metadata fallback.', error);
+    return buildUser(authUser, null);
+  }
 }
 
 function normalizeAuthError(err: unknown, mode: 'login' | 'register'): Error {
@@ -225,7 +232,11 @@ export async function login(identifier: string, password: string): Promise<AuthR
       throw new Error('Login failed.');
     }
 
-    await ensureProfile(data.user);
+    try {
+      await ensureProfile(data.user);
+    } catch (profileError) {
+      console.warn('Profile sync failed during login. Continuing with auth user.', profileError);
+    }
     const user = await buildCurrentUser(data.user);
 
     return {
@@ -262,13 +273,17 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
       throw new Error('Registration failed.');
     }
 
-    await ensureProfile(data.user, {
-      student_id: payload.universityId || data.user.id,
-      full_name: payload.displayName,
-      nationality: 'Unknown',
-      major: 'general',
-      level: payload.role === 'college-member' ? 'College Member' : 'Visitor',
-    });
+    try {
+      await ensureProfile(data.user, {
+        student_id: payload.universityId || data.user.id,
+        full_name: payload.displayName,
+        nationality: 'Unknown',
+        major: 'general',
+        level: payload.role === 'college-member' ? 'College Member' : 'Visitor',
+      });
+    } catch (profileError) {
+      console.warn('Profile sync failed during registration. Continuing with auth user.', profileError);
+    }
 
     let accessToken = data.session?.access_token || null;
     if (!accessToken) {
@@ -300,7 +315,12 @@ export async function me(token: string): Promise<StrapiUser> {
     throw new Error('No active user session found.');
   }
 
-  await ensureProfile(data.user);
+  try {
+    await ensureProfile(data.user);
+  } catch (profileError) {
+    console.warn('Profile sync failed during session restore. Continuing with auth user.', profileError);
+  }
+
   return buildCurrentUser(data.user);
 }
 

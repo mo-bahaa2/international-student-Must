@@ -86,6 +86,7 @@ export interface ChatProviderCurrentUser {
   id: number | string;
   displayName: string;
   avatarUrl: string | null;
+  email?: string;
   role?: 'user' | 'admin';
 }
 

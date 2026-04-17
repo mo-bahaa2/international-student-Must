@@ -35,6 +35,7 @@ const currentUserParticipant = (user: ReturnType<typeof useAuth>['user']) => ({
   id: user?.id ?? 'guest',
   displayName: user?.displayName || user?.username || 'You',
   avatarUrl: user?.avatar?.url ?? null,
+  email: user?.email,
   role: (user?.role?.type === ROLES.ADMIN ? 'admin' : 'user') as 'user' | 'admin',
 });
 
@@ -44,6 +45,24 @@ const generateClientMessageId = () => {
   }
 
   return `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> => {
+  return await new Promise<T>((resolve, reject) => {
+    const timerId = window.setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timerId);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timerId);
+        reject(error);
+      });
+  });
 };
 
 const updateConversationPreview = (
@@ -123,7 +142,7 @@ export function ChatStoreProvider({ children }: { children: React.ReactNode }) {
   const provider = useMemo(() => {
     const createdProvider = createChatProvider(currentUser as ChatProviderCurrentUser);
     return createdProvider;
-  }, [currentUser.id, currentUser.displayName, currentUser.avatarUrl]);
+  }, [currentUser.id, currentUser.displayName, currentUser.avatarUrl, currentUser.email]);
 
   const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
   const unreadCount = conversations.reduce((total, conversation) => total + conversation.unreadCount, 0);
@@ -347,10 +366,14 @@ export function ChatStoreProvider({ children }: { children: React.ReactNode }) {
     setAnnouncement(`Sending message: ${trimmedText}`);
 
     try {
-      const response = await provider.sendMessage(activeConversationId, {
-        text: trimmedText,
-        clientMessageId,
-      });
+      const response = await withTimeout(
+        provider.sendMessage(activeConversationId, {
+          text: trimmedText,
+          clientMessageId,
+        }),
+        15000,
+        'Message request timed out. Please retry.',
+      );
 
       const sentMessage = response.data;
       setMessagesByConversation((currentMessages) => ({

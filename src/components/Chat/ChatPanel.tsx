@@ -311,14 +311,14 @@ export function ChatPanel() {
               </div>
 
               <div className="px-4 pb-3 sm:px-6">
-                <label className="sr-only" htmlFor="admin-search">Search admins</label>
+                <label className="sr-only" htmlFor="admin-search">Search advisors</label>
                 <div className="relative">
                   <UserPlus className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     id="admin-search"
                     value={adminQuery}
                     onChange={(event) => setAdminQuery(event.target.value)}
-                    placeholder="Find admin from dashboard users"
+                    placeholder="Find advisor by name"
                     className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   />
                 </div>

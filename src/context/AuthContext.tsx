@@ -35,6 +35,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const clearSessionAndPurgeLocalSupabase = async () => {
+    clearSession();
+
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.warn('Failed to clear local Supabase session cache.', error);
+    }
+  };
+
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> => {
+    return await new Promise<T>((resolve, reject) => {
+      const timerId = window.setTimeout(() => {
+        reject(new Error(timeoutMessage));
+      }, timeoutMs);
+
+      promise
+        .then((value) => {
+          window.clearTimeout(timerId);
+          resolve(value);
+        })
+        .catch((error) => {
+          window.clearTimeout(timerId);
+          reject(error);
+        });
+    });
+  };
+
   const refreshUser = async () => {
     const freshUser = await me(token || '');
     setUser(freshUser);
@@ -43,17 +71,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const initialToken = await getCurrentAccessToken();
+        const initialToken = await withTimeout(
+          getCurrentAccessToken(),
+          8000,
+          'Timed out restoring auth session from local storage.',
+        );
         setToken(initialToken);
 
         if (initialToken) {
-          const freshUser = await me(initialToken);
+          const freshUser = await withTimeout(
+            me(initialToken),
+            10000,
+            'Timed out loading current user profile.',
+          );
           setUser(freshUser);
         } else {
           clearSession();
         }
-      } catch {
-        clearSession();
+      } catch (error) {
+        console.warn('Auth initialization failed. Clearing local session cache.', error);
+        await clearSessionAndPurgeLocalSupabase();
       } finally {
         setIsLoading(false);
       }
@@ -63,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextToken = session?.access_token || null;
       setToken(nextToken);
 
@@ -72,12 +109,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      try {
-        const freshUser = await me(nextToken);
-        setUser(freshUser);
-      } catch {
-        clearSession();
-      }
+      void (async () => {
+        try {
+          const freshUser = await withTimeout(
+            me(nextToken),
+            10000,
+            'Timed out refreshing user after auth state change.',
+          );
+          setUser(freshUser);
+        } catch (error) {
+          console.warn('Auth state refresh failed. Clearing local session cache.', error);
+          await clearSessionAndPurgeLocalSupabase();
+        }
+      })();
     });
 
     return () => {
