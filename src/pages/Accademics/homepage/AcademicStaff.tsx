@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AcademicStaffProfileCard, { AcademicStaffProfileCardProps } from '../../../components/AcademicStaffProfileCard';
+import { getAcademicStaffList } from '../../../services/cmsApi';
 
 export default function AcademicStaff() {
   const [staffList, setStaffList] = useState<AcademicStaffProfileCardProps[]>([]);
@@ -8,31 +9,25 @@ export default function AcademicStaff() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_CMS_URL || import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
-        const res = await fetch(`${baseUrl}/api/academic-staffs?populate=*`);
-        const json = await res.json();
+        const rows = await getAcademicStaffList();
 
-        if (json.data) {
-          const formattedStaff = json.data.map((item: any) => {
-            const attrs = item.attributes || item;
-            const mediaImage = attrs.imageUrl || attrs.image || attrs.avatar;
-            const mediaCv = attrs.cvUrl || attrs.cvurl || attrs.cvDocument || attrs.cv;
-            
-            const imagePath = mediaImage?.url || mediaImage?.data?.attributes?.url;
-            const cvPath = mediaCv?.url || mediaCv?.data?.attributes?.url;
-
+        if (rows.length > 0) {
+          const formattedStaff = rows.map((member): AcademicStaffProfileCardProps => {
             return {
-              name: attrs.name,
-              role: attrs.role,
-              specialty: attrs.specialty || '',
-              email: attrs.email || '',
-              bio: attrs.bio || '',
-              cvLabel: attrs.cvLabel || attrs.cvlabel || 'Download CV (PDF)',
-              qualifications: attrs.qualifications || [],
-              researchDirections: attrs.researchDirections || [],
-              experience: attrs.experience || [],
-              imageUrl: imagePath ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`) : '/accademics/image-not-hero.png',
-              cvUrl: cvPath ? (cvPath.startsWith('http') ? cvPath : `${baseUrl}${cvPath}`) : '#'
+              title: member.title,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              position: member.position,
+              name: member.name,
+              role: member.role,
+              specialty: member.specialty || '',
+              department: member.department || member.role || '',
+              email: member.email || '',
+              bio: member.bio || '',
+              cvLabel: member.cvLabel || 'Download CV (PDF)',
+              googleScholarLink: member.googleScholarLink,
+              imageUrl: member.avatarUrl === '#' ? '/accademics/image-not-hero.png' : member.avatarUrl,
+              cvUrl: member.cvUrl,
             };
           });
           setStaffList(formattedStaff);
@@ -43,7 +38,8 @@ export default function AcademicStaff() {
         setIsLoading(false);
       }
     };
-    fetchStaff();
+
+    void fetchStaff();
   }, []);
 
   return (

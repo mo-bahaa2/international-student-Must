@@ -1,17 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import { ROLES } from '../constants/roles';
 import {
   login as loginRequest,
   register as registerRequest,
+  getCurrentAccessToken,
+  logout as logoutRequest,
   me,
   type RegisterPayload,
   type StrapiUser,
 } from '../services/auth';
-
-interface JwtPayload {
-  exp?: number;
-}
+import { supabase } from '../services/supabase';
 
 interface AuthContextValue {
   user: StrapiUser | null;
@@ -19,7 +17,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAdmin: boolean;
   isCollegeMember: boolean;
   refreshUser: () => Promise<void>;
@@ -27,53 +25,33 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const decoded = jwtDecode<JwtPayload>(token);
-    if (!decoded.exp) {
-      return true;
-    }
-    return decoded.exp * 1000 <= Date.now();
-  } catch {
-    return true;
-  }
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<StrapiUser | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('jwt'));
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const clearSession = () => {
-    localStorage.removeItem('jwt');
     setToken(null);
     setUser(null);
   };
 
   const refreshUser = async () => {
-    if (!token) {
-      setUser(null);
-      return;
-    }
-
-    const freshUser = await me(token);
+    const freshUser = await me(token || '');
     setUser(freshUser);
   };
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem('jwt');
-
-      if (!storedToken || isTokenExpired(storedToken)) {
-        clearSession();
-        setIsLoading(false);
-        return;
-      }
-
-      setToken(storedToken);
       try {
-        const freshUser = await me(storedToken);
-        setUser(freshUser);
+        const initialToken = await getCurrentAccessToken();
+        setToken(initialToken);
+
+        if (initialToken) {
+          const freshUser = await me(initialToken);
+          setUser(freshUser);
+        } else {
+          clearSession();
+        }
       } catch {
         clearSession();
       } finally {
@@ -81,17 +59,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    initializeAuth();
+    void initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const nextToken = session?.access_token || null;
+      setToken(nextToken);
+
+      if (!nextToken) {
+        setUser(null);
+        return;
+      }
+
+      try {
+        const freshUser = await me(nextToken);
+        setUser(freshUser);
+      } catch {
+        clearSession();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (identifier: string, password: string) => {
     setIsLoading(true);
     try {
       const auth = await loginRequest(identifier, password);
-      localStorage.setItem('jwt', auth.jwt);
       setToken(auth.jwt);
-      const freshUser = await me(auth.jwt);
-      setUser(freshUser);
+      setUser(auth.user);
     } finally {
       setIsLoading(false);
     }
@@ -101,17 +100,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const auth = await registerRequest(payload);
-      localStorage.setItem('jwt', auth.jwt);
       setToken(auth.jwt);
-      const freshUser = await me(auth.jwt);
-      setUser(freshUser);
+      setUser(auth.user);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    clearSession();
+  const logout = async () => {
+    try {
+      await logoutRequest();
+    } catch (error) {
+      console.warn('Supabase signOut failed, clearing local session anyway.', error);
+    } finally {
+      clearSession();
+    }
   };
 
   const value = useMemo<AuthContextValue>(

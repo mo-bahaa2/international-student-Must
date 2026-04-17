@@ -90,7 +90,7 @@ export default function Playground() {
               month: attrs.month,
               timeRange: attrs.timeRange,
               href: attrs.href || '#',
-              imageUrl: imagePath ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`) : '/accademics/events/event-1.jpg'
+              imageUrl: imagePath ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`) : undefined
             };
           });
           setEventsList(formattedEvents);

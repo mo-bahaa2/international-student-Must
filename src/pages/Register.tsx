@@ -83,7 +83,6 @@ export function Register() {
               className="p-5 rounded-xl border border-gray-300 dark:border-slate-700 hover:border-green-500 text-left"
             >
               <h2 className="font-semibold text-gray-900 dark:text-white">I am a College Member</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Student or college member with university ID</p>
             </button>
           </div>
         )}

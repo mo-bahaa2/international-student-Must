@@ -43,10 +43,10 @@ export function Settings() {
     setIsSavingProfile(true);
 
     try {
-      let uploadedAvatarId: number | undefined;
+      let uploadedAvatarUrl: string | undefined;
       if (avatarFile) {
         const uploaded = await uploadAvatar(avatarFile);
-        uploadedAvatarId = uploaded.id;
+        uploadedAvatarUrl = uploaded.url;
       }
 
       const payload: UpdateProfilePayload = {
@@ -55,8 +55,8 @@ export function Settings() {
         phoneNumber: phoneNumber.trim() || undefined,
       };
 
-      if (uploadedAvatarId) {
-        payload.avatar = uploadedAvatarId;
+      if (uploadedAvatarUrl) {
+        payload.avatarUrl = uploadedAvatarUrl;
       }
 
       await updateProfile(user.id, payload);

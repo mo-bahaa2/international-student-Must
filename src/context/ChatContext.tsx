@@ -32,7 +32,7 @@ interface ChatContextValue {
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
 const currentUserParticipant = (user: ReturnType<typeof useAuth>['user']) => ({
-  id: user?.id ?? 0,
+  id: user?.id ?? 'guest',
   displayName: user?.displayName || user?.username || 'You',
   avatarUrl: user?.avatar?.url ?? null,
   role: (user?.role?.type === ROLES.ADMIN ? 'admin' : 'user') as 'user' | 'admin',
@@ -103,7 +103,7 @@ const appendUniqueMessages = (currentMessages: ChatThreadMessage[], nextMessages
 
 export function ChatStoreProvider({ children }: { children: React.ReactNode }) {
   const { user, token, isLoading: isAuthLoading } = useAuth();
-  const previousUserIdRef = useRef<number | null>(null);
+  const previousUserIdRef = useRef<string | number | null>(null);
   const lastReadMessageRef = useRef<Record<string, string | undefined>>({});
   const returnFocusRef = useRef<HTMLElement | null>(null);
 

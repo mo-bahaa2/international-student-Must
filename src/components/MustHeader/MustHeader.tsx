@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './MustHeader.scss';
 import { MENU_ITEMS, MenuItem } from './navigation.data';
 import { useAuth } from '../../context/AuthContext';
@@ -19,6 +19,7 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
   const [mobileActiveSubItem, setMobileActiveSubItem] = useState<MenuItem | null>(null);
 
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const strapiAdminUrl = import.meta.env.VITE_STRAPI_URL
     ? `${import.meta.env.VITE_STRAPI_URL.replace(/\/$/, '')}/admin`
@@ -80,9 +81,10 @@ export const MustHeader: React.FC<MustHeaderProps> = ({ darkMode, onToggleDarkMo
     onToggleDarkMode();
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     closeMenus();
+    navigate('/');
   };
 
   return (

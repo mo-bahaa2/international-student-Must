@@ -1,17 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getCmsMediaUrl } from '../services/cmsApi';
 
 export function Profile() {
   const { user } = useAuth();
 
-  const strapiBase = (import.meta.env.VITE_STRAPI_URL || '').replace(/\/$/, '');
   const rawAvatarUrl = user?.avatar?.url || '';
   const avatarSrc = rawAvatarUrl
-    ? rawAvatarUrl.startsWith('http')
-      ? rawAvatarUrl
-      : strapiBase
-        ? `${strapiBase}${rawAvatarUrl.startsWith('/') ? '' : '/'}${rawAvatarUrl}`
-        : rawAvatarUrl
+    ? getCmsMediaUrl(rawAvatarUrl)
     : 'https://via.placeholder.com/80x80?text=User';
 
   return (
@@ -36,12 +32,7 @@ export function Profile() {
               <p className="font-medium text-gray-900 dark:text-white">{user.role?.name || user.role?.type}</p>
             </div>
           )}
-          {user?.universityId && (
-            <div>
-              <p className="text-gray-500 dark:text-gray-400">University ID</p>
-              <p className="font-medium text-gray-900 dark:text-white">{user.universityId}</p>
-            </div>
-          )}
+
           <div className="md:col-span-2">
             <p className="text-gray-500 dark:text-gray-400">Bio</p>
             <p className="font-medium text-gray-900 dark:text-white">{user?.bio || 'No bio yet.'}</p>

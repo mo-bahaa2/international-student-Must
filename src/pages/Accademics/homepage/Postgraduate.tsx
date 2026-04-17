@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import NewStudyPlanResources from '../../../components/NewStudyPlanResources';
 import { postgradStudyPlanConfig } from '../../../components/newStudyPlanResourcesMockData';
+import { getFileUrl, getManyFileLinks, getStudyPlansRow } from '../../../services/cmsApi';
 
 export default function Postgraduate() {
   const [config, setConfig] = useState<any>(postgradStudyPlanConfig);
@@ -9,51 +10,36 @@ export default function Postgraduate() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_CMS_URL || import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
-        const res = await fetch(`${baseUrl}/api/study-plans?populate=*`);
-        const json = await res.json();
+        const attrs = await getStudyPlansRow();
 
-        if (json.data && json.data.length > 0) {
-          const attrs = json.data[0].attributes || json.data[0];
-          const getFileUrl = (field: any) => {
-            const path = field?.url || field?.data?.attributes?.url;
-            return path ? (path.startsWith('http') ? path : `${baseUrl}${path}`) : '#';
-          };
-          const getMultipleFiles = (media: any) => {
-            const items = media?.data || media || [];
-            return Array.isArray(items) ? items.map((f: any, i: number) => ({
-              id: `prof-${i}`, title: f?.attributes?.name || f?.name || `Diploma ${i + 1}`, url: f?.url ? (f.url.startsWith('http') ? f.url : `${baseUrl}${f.url}`) : '#'
-            })) : [];
-          };
-
-          setConfig({
-            mode: 'degree-tracks',
-            title: 'Postgraduate Study Plans',
-            tracks: {
-              msc: {
-                type: 'research', label: 'M. SC',
-                resourcesBySpecialty: {
-                  CS: attrs.Postgrad_CS ? [{ id: 'pg-msc-cs', title: 'MSc Computer Science', url: getFileUrl(attrs.Postgrad_CS) }] : [],
-                  IS: attrs.Postgrad_AI ? [{ id: 'pg-msc-is', title: 'MSc Artificial Intelligence', url: getFileUrl(attrs.Postgrad_AI) }] : [],
-                },
-              },
-              phd: {
-                type: 'research', label: 'PH.D',
-                resourcesBySpecialty: {
-                  CS: attrs.Postgrad_CS ? [{ id: 'pg-phd-cs', title: 'PhD Computer Science', url: getFileUrl(attrs.Postgrad_CS) }] : [],
-                  IS: attrs.Postgrad_AI ? [{ id: 'pg-phd-is', title: 'PhD Artificial Intelligence', url: getFileUrl(attrs.Postgrad_AI) }] : [],
-                },
-              },
-              professional: {
-                type: 'professional', label: 'Professional Degrees',
-                resources: getMultipleFiles(attrs.Professional_diplomas),
+        setConfig({
+          mode: 'degree-tracks',
+          title: 'Study Plans',
+          tracks: {
+            msc: {
+              type: 'research', label: 'M. SC',
+              resourcesBySpecialty: {
+                CS: attrs.postgrad_cs ? [{ id: 'pg-msc-cs', title: 'MSc Computer Science', url: getFileUrl(attrs.postgrad_cs) }] : [],
+                IS: attrs.postgrad_ai ? [{ id: 'pg-msc-is', title: 'MSc Artificial Intelligence', url: getFileUrl(attrs.postgrad_ai) }] : [],
               },
             },
-          });
-        }
+            phd: {
+              type: 'research', label: 'PH.D',
+              resourcesBySpecialty: {
+                CS: attrs.postgrad_cs ? [{ id: 'pg-phd-cs', title: 'PhD Computer Science', url: getFileUrl(attrs.postgrad_cs) }] : [],
+                IS: attrs.postgrad_ai ? [{ id: 'pg-phd-is', title: 'PhD Artificial Intelligence', url: getFileUrl(attrs.postgrad_ai) }] : [],
+              },
+            },
+            professional: {
+              type: 'professional', label: 'Professional Degrees',
+              resources: getManyFileLinks(attrs.professional_diplomas, 'prof'),
+            },
+          },
+        });
       } catch (e) { console.error(e); } finally { setIsLoading(false); }
     };
-    fetchPlans();
+
+    void fetchPlans();
   }, []);
 
   return (

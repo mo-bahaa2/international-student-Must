@@ -17,6 +17,21 @@ import type {
 type UnknownRecord = Record<string, unknown>;
 type SenderRole = 'user' | 'admin';
 
+const toNumericUserId = (value: number | string | undefined): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+};
+
 const toIso = (value: unknown): string => {
   if (typeof value === 'string' && value.trim()) {
     return value;
@@ -313,7 +328,7 @@ export function createApiChatProvider(currentUser?: ChatProviderCurrentUser): Ch
       const rows = extractArray<UnknownRecord>(response);
 
       return {
-        data: rows.map((row) => mapMessage(row, currentUser?.id)),
+        data: rows.map((row) => mapMessage(row, toNumericUserId(currentUser?.id))),
         meta: {
           nextCursor: null,
         },
@@ -339,7 +354,7 @@ export function createApiChatProvider(currentUser?: ChatProviderCurrentUser): Ch
         data: mapMessage({
           ...(row || {}),
           conversation: conversationId,
-        }, currentUser?.id, true),
+        }, toNumericUserId(currentUser?.id), true),
       };
     },
 

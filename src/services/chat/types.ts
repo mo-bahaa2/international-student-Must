@@ -1,5 +1,5 @@
 export interface ChatParticipant {
-  id: number;
+  id: number | string;
   displayName: string;
   avatarUrl: string | null;
   role?: 'user' | 'admin';
@@ -12,7 +12,7 @@ export interface ChatAdmin extends ChatParticipant {
 export interface ChatConversationMessagePreview {
   id: string;
   text: string;
-  senderId: number;
+  senderId: number | string;
   createdAt: string;
 }
 
@@ -60,7 +60,7 @@ export interface ChatMessageListResponse {
 }
 
 export interface ChatCreateConversationPayload {
-  participantIds: number[];
+  participantIds: Array<number | string>;
   title: string;
 }
 
@@ -83,7 +83,7 @@ export interface ChatProvider {
 }
 
 export interface ChatProviderCurrentUser {
-  id: number;
+  id: number | string;
   displayName: string;
   avatarUrl: string | null;
   role?: 'user' | 'admin';

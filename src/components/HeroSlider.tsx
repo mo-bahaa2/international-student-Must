@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { apiRequest, getCurrentApiBaseUrl } from '../services/api';
+import { getHeroSlides, type HeroNavTreeItem } from '../services/cmsApi';
+import { STATIC_MENU_ITEMS } from './LinksBar';
 import { useAuth } from '../context/AuthContext';
 
 type SliderImage = {
@@ -11,70 +12,25 @@ type SliderImage = {
   title: string;
 };
 
-type HeroSlideApiItem = {
-  id: number;
-  title?: string | null;
-  image?: {
-    url?: string;
-  };
-  attributes?: {
-    title?: string | null;
-    image?: {
-      data?: {
-        attributes?: {
-          url?: string;
-        };
-      };
-    };
-  };
-};
-
-type HeroSlidesApiResponse = {
-  data?: HeroSlideApiItem[];
-};
-
 type HeroNavTarget = '_self' | '_blank';
 
-type HeroNavTreeApiItem = {
-  title?: string;
-  url?: string;
-  target?: HeroNavTarget;
-  accessRole?: 'public' | 'visitor' | 'college-member';
-  children?: HeroNavTreeApiItem[];
-};
-
-type HeroNavTreeItem = {
-  title: string;
-  url: string;
-  target: HeroNavTarget;
-  accessRole: 'public' | 'visitor' | 'college-member';
-  children: HeroNavTreeItem[];
-};
+type LocalHeroNavTreeItem = HeroNavTreeItem;
 
 type MenuAccessRole = 'public' | 'visitor' | 'college-member';
 
-const getStrapiBaseUrl = () => {
-  const base = getCurrentApiBaseUrl().trim();
-  return base.endsWith('/') ? base.slice(0, -1) : base;
-};
-
-const getSlideImageUrl = (item: HeroSlideApiItem): string | undefined => {
-  return item.attributes?.image?.data?.attributes?.url || item.image?.url;
-};
-
-const getSlideTitle = (item: HeroSlideApiItem, index: number): string => {
-  return item.attributes?.title || item.title || `Slide ${index + 1}`;
-};
-
-const toAbsoluteUrl = (url: string, baseUrl: string) => {
-  if (/^https?:\/\//i.test(url)) {
-    return url;
-  }
-  if (!baseUrl) {
-    return url;
-  }
-  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
-};
+const STATIC_HERO_NAV_TREE: LocalHeroNavTreeItem[] = STATIC_MENU_ITEMS.map((item) => ({
+  title: item.label,
+  url: item.to,
+  target: '_self',
+  accessRole: 'public',
+  children: (item.children || []).map((child) => ({
+    title: child.label,
+    url: child.to,
+    target: '_self',
+    accessRole: 'public',
+    children: [],
+  })),
+}));
 
 const normalizeNavPath = (url: string) => {
   const trimmed = url.trim();
@@ -93,101 +49,6 @@ const normalizeNavPath = (url: string) => {
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
 };
 
-const parseHeroNavTree = (payload: unknown): HeroNavTreeApiItem[] => {
-  if (!payload || typeof payload !== 'object') {
-    return [];
-  }
-
-  const extractFromMenuRecords = (records: unknown[]): HeroNavTreeApiItem[] => {
-    const menuRecords = records.filter((entry) => entry && typeof entry === 'object') as Array<{
-      title?: string;
-      slug?: string;
-      items?: unknown;
-    }>;
-
-    // Prefer the explicit hero-nav menu record when present.
-    const heroNavRecord = menuRecords.find((entry) => entry.title === 'hero-nav');
-    if (heroNavRecord && Array.isArray(heroNavRecord.items)) {
-      return heroNavRecord.items as HeroNavTreeApiItem[];
-    }
-
-    const firstRecordWithItems = menuRecords.find((entry) => Array.isArray(entry.items));
-    if (firstRecordWithItems && Array.isArray(firstRecordWithItems.items)) {
-      return firstRecordWithItems.items as HeroNavTreeApiItem[];
-    }
-
-    return [];
-  };
-
-  const tryExtract = (candidate: unknown): HeroNavTreeApiItem[] => {
-    if (Array.isArray(candidate)) {
-      const fromMenuRecords = extractFromMenuRecords(candidate);
-      if (fromMenuRecords.length > 0) {
-        return fromMenuRecords;
-      }
-      return candidate as HeroNavTreeApiItem[];
-    }
-    if (!candidate || typeof candidate !== 'object') {
-      return [];
-    }
-
-    const record = candidate as {
-      ['hero-nav']?: unknown;
-      menu?: unknown;
-      data?: unknown;
-    };
-
-    if (Array.isArray(record['hero-nav'])) {
-      return record['hero-nav'] as HeroNavTreeApiItem[];
-    }
-
-    if (record.menu) {
-      const menuItems = tryExtract(record.menu);
-      if (menuItems.length > 0) {
-        return menuItems;
-      }
-    }
-
-    if (record.data) {
-      const dataItems = tryExtract(record.data);
-      if (dataItems.length > 0) {
-        return dataItems;
-      }
-    }
-
-    return [];
-  };
-
-  return tryExtract(payload);
-};
-
-const normalizeHeroNavTree = (items: HeroNavTreeApiItem[]): HeroNavTreeItem[] => {
-  return items
-    .map((item): HeroNavTreeItem | null => {
-      const title = item.title?.trim();
-      const rawUrl = item.url?.trim() || '/';
-
-      if (!title) {
-        return null;
-      }
-
-      const target: HeroNavTarget = item.target === '_blank' ? '_blank' : '_self';
-      const accessRole: MenuAccessRole =
-        item.accessRole === 'visitor' || item.accessRole === 'college-member'
-          ? item.accessRole
-          : 'public';
-
-      return {
-        title,
-        url: target === '_self' ? normalizeNavPath(rawUrl) : rawUrl,
-        target,
-        accessRole,
-        children: normalizeHeroNavTree(Array.isArray(item.children) ? item.children : []),
-      };
-    })
-    .filter((item): item is HeroNavTreeItem => item !== null);
-};
-
 const isMenuItemVisibleForRole = (accessRole: MenuAccessRole, userRole?: string | null): boolean => {
   if (accessRole === 'public') {
     return true;
@@ -204,7 +65,7 @@ const isMenuItemVisibleForRole = (accessRole: MenuAccessRole, userRole?: string 
   return userRole === 'college-member';
 };
 
-const filterVisibleHeroNavTree = (items: HeroNavTreeItem[], userRole?: string | null): HeroNavTreeItem[] => {
+const filterVisibleHeroNavTree = (items: LocalHeroNavTreeItem[], userRole?: string | null): LocalHeroNavTreeItem[] => {
   return items
     .filter((item) => isMenuItemVisibleForRole(item.accessRole, userRole))
     .map((item) => ({
@@ -214,7 +75,7 @@ const filterVisibleHeroNavTree = (items: HeroNavTreeItem[], userRole?: string | 
 };
 
 interface HeroNavMenuNodeProps {
-  item: HeroNavTreeItem;
+  item: LocalHeroNavTreeItem;
   path: string[];
   activePath: string[];
   onActivatePath: (path: string[]) => void;
@@ -290,7 +151,7 @@ export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [slides, setSlides] = useState<SliderImage[]>([]);
-  const [heroNavTree, setHeroNavTree] = useState<HeroNavTreeItem[]>([]);
+  const [heroNavTree] = useState<LocalHeroNavTreeItem[]>(STATIC_HERO_NAV_TREE);
   const [activeHeroNavPath, setActiveHeroNavPath] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
@@ -303,32 +164,9 @@ export function HeroSlider() {
 
   useEffect(() => {
     const fetchSlides = async () => {
-      const baseUrl = getStrapiBaseUrl();
-
       try {
-        const payload = await apiRequest<HeroSlidesApiResponse>(
-          '/api/hero-slides?populate=image&filters[isActive][$eq]=true&sort=order:asc',
-          { auth: false }
-        );
-        const apiItems = Array.isArray(payload?.data) ? payload.data : [];
-
-        const mappedSlides = apiItems
-          .map((item, index): SliderImage | null => {
-            const imageUrl = getSlideImageUrl(item);
-
-            if (!imageUrl) {
-              return null;
-            }
-
-            return {
-              id: item.id,
-              src: toAbsoluteUrl(imageUrl, baseUrl),
-              title: getSlideTitle(item, index),
-            };
-          })
-          .filter((item): item is SliderImage => item !== null);
-
-        setSlides(mappedSlides);
+        const mappedSlides = await getHeroSlides();
+        setSlides(mappedSlides.map((slide) => ({ id: slide.id, src: slide.src, title: slide.title })));
         setCurrentIndex(0);
       } catch {
         setSlides([]);
@@ -341,24 +179,8 @@ export function HeroSlider() {
   }, []);
 
   useEffect(() => {
-    const fetchHeroNavTree = async () => {
-      try {
-        const payload = await apiRequest<unknown>(
-          '/api/tree-menus/menu',
-          { auth: false }
-        );
-
-        const rawHeroNavTree = parseHeroNavTree(payload);
-        const normalizedHeroNavTree = normalizeHeroNavTree(rawHeroNavTree);
-
-        setHeroNavTree(normalizedHeroNavTree);
-      } catch {
-        setHeroNavTree([]);
-      }
-    };
-
-    fetchHeroNavTree();
-  }, []);
+    setActiveHeroNavPath([]);
+  }, [heroNavTree.length]);
 
   const activateHeroNavPath = (path: string[]) => {
     if (hoverResetTimeoutRef.current !== null) {
@@ -376,7 +198,11 @@ export function HeroSlider() {
     }, 200);
   };
 
-  const visibleHeroNavTree = filterVisibleHeroNavTree(heroNavTree, user?.role?.type ?? null);
+  const normalizedHeroNavTree = heroNavTree.map((item) => ({
+    ...item,
+    url: item.target === '_self' ? normalizeNavPath(item.url) : item.url,
+  }));
+  const visibleHeroNavTree = filterVisibleHeroNavTree(normalizedHeroNavTree, user?.role?.type ?? null);
   const canScrollHeroNavLeft = heroNavOffset > 1;
   const canScrollHeroNavRight = heroNavOffset < heroNavMaxOffset - 1;
 

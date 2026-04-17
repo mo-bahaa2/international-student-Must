@@ -9,7 +9,6 @@ export default function ResourcesComponent({ config }: ResourcesComponentProps) 
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
       <h3 className="text-2xl font-bold text-slate-900 md:text-3xl">{config.title}</h3>
       {config.description && <p className="mt-2 text-slate-600">{config.description}</p>}
-
       <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
         {config.resources.map((resource) => (
           <a

@@ -30,6 +30,7 @@ interface RelatedEventsCarouselProps {
 
 interface NewsCarouselProps {
   news: NewsCardItem[];
+  badgeLabel?: string;
 }
 
 export function RelatedEventsCarousel({ events, onSeeAllEvents }: RelatedEventsCarouselProps) {
@@ -85,7 +86,7 @@ export function RelatedEventsCarousel({ events, onSeeAllEvents }: RelatedEventsC
   );
 }
 
-export function NewsCarousel({ news }: NewsCarouselProps) {
+export function NewsCarousel({ news, badgeLabel = 'News' }: NewsCarouselProps) {
   return (
     <section className="w-full">
       {/* CHANGED: xl:grid-cols-3 and increased gap so cards are wider */}
@@ -107,7 +108,7 @@ export function NewsCarousel({ news }: NewsCarouselProps) {
 
               <div className="p-8 flex-1 flex flex-col">
                 <div className="mb-5">
-                   <span className="inline-block rounded-full border border-blue-300 bg-blue-100 px-4 py-1.5 text-sm font-bold uppercase tracking-wider text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300">News</span>
+                   <span className="inline-block rounded-full border border-blue-300 bg-blue-100 px-4 py-1.5 text-sm font-bold uppercase tracking-wider text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300">{badgeLabel}</span>
                 </div>
                 <h3 className="line-clamp-3 mb-4 text-3xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">{item.title}</h3>
                 <p className="line-clamp-3 flex-1 text-xl leading-relaxed text-slate-600 dark:text-slate-400">{item.description}</p>

@@ -12,9 +12,15 @@ import { Academics } from "./pages/Accademics/Academics";
 import Undergraduate from "./pages/Accademics/homepage/Undergraduate";
 import FormationOfCollegeCouncil from "./pages/Accademics/homepage/FormationOfCollegeCouncil";
 import Postgraduate from "./pages/Accademics/homepage/Postgraduate";
+import Registeration from "./pages/Accademics/homepage/Registeration";
 import Schedules from "./pages/Accademics/homepage/Schedules";
+import Calendar from "./pages/Accademics/homepage/Calendar";
+import Advising from './pages/Accademics/homepage/Advising';
+import HowToApply from './pages/Accademics/homepage/HowToApply';
+import ELearning from './pages/Accademics/homepage/ELearning';
 import Questionnaires from './pages/Questionnaires';
 import { Resources } from './pages/Resources';
+import { Facilities } from './pages/Facilities';
 import { Announcements } from './pages/Announcements';
 import { Notifications } from './pages/Notifications';
 import { ContactUs } from './pages/ContactUs';
@@ -28,6 +34,7 @@ import Playground from './pages/Playground';
 import { NotFound } from './pages/NotFound';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import ActivitiesPage from './pages/Activities';
 
 // Custom Collection Pages
 import News from './pages/News'; 
@@ -82,13 +89,25 @@ function AppContent() {
               <Route path="/undergraduate" element={<Undergraduate />} />
               <Route path="/formation-of-college-council" element={<FormationOfCollegeCouncil />} />
               <Route path="/postgraduate" element={<Postgraduate />} />
+              <Route path="/registeration" element={<Registeration />} />
+              <Route path="/Registeration" element={<Registeration />} />
               <Route path="/schedules" element={<Schedules />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/academic-advising" element={<Advising />} />
+              <Route path="/how-to-apply" element={<HowToApply />} />
+              <Route path="/e-learning" element={<ELearning />} />
+              <Route path="/activities" element={<ActivitiesPage />} />
+              <Route path="/cultural" element={<ActivitiesPage />} />
+              <Route path="/sports" element={<ActivitiesPage />} />
+              <Route path="/art" element={<ActivitiesPage />} />
+              <Route path="/student-clubs" element={<ActivitiesPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/events" element={<Events />} />
               {/* ------------------------------------- */}
 
               <Route path="/questionnaires" element={<Questionnaires />} />
               <Route path="/resources" element={<Resources />} />
+              <Route path="/facilities" element={<Facilities />} />
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/contactus" element={<ContactUs />} />

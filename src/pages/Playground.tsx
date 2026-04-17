@@ -9,123 +9,60 @@ import ResourcesComponent from '../components/ResourcesComponent';
 import { mockGenericReources } from '../components/genericResourcesMockData';
 import { PlaygroundVideo } from '../components/PlaygroundVideo';
 import { playgroundVideoItems, videoSrc } from '../data/playgroundVideos';
+import {
+  getAcademicStaffList,
+  getEventsList,
+  getManyFileLinks,
+  getNewsList,
+  getStudyPlansRow,
+  getFileUrl,
+  type EventCardItem,
+  type NewsCardItem,
+} from '../services/cmsApi';
 
 export default function Playground() {
   const [staffList, setStaffList] = useState<AcademicStaffProfileCardProps[]>([]);
-  const [eventsList, setEventsList] = useState<any[]>([]);
-  const [newsList, setNewsList] = useState<any[]>([]);
+  const [eventsList, setEventsList] = useState<EventCardItem[]>([]);
+  const [newsList, setNewsList] = useState<NewsCardItem[]>([]);
   
-  // Initialize with your friend's mock data, then overwrite with live Strapi data
-  const [undergradConfig, setUndergradConfig] = useState<any>(undergradStudyPlanConfig);
-  const [postgradConfig, setPostgradConfig] = useState<any>(postgradStudyPlanConfig);
+  // Initialize with mock data, then overwrite with live Supabase data
+  const [undergradConfig, setUndergradConfig] = useState<typeof undergradStudyPlanConfig>(undergradStudyPlanConfig);
+  const [postgradConfig, setPostgradConfig] = useState<typeof postgradStudyPlanConfig>(postgradStudyPlanConfig);
   
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_CMS_URL || import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
-        
-        const [staffRes, eventsRes, newsRes, studyPlansRes] = await Promise.all([
-          fetch(`${baseUrl}/api/academic-staffs?populate=*`),
-          fetch(`${baseUrl}/api/events?populate=*`),
-          fetch(`${baseUrl}/api/news-items?populate=*`),
-          fetch(`${baseUrl}/api/study-plans?populate=*`),
+        const [staffRows, eventsRows, newsRows, studyPlanAttrs] = await Promise.all([
+          getAcademicStaffList(),
+          getEventsList(),
+          getNewsList(),
+          getStudyPlansRow(),
         ]);
 
-        const [staffJson, eventsJson, newsJson, studyPlansJson] = await Promise.all([
-          staffRes.json(),
-          eventsRes.json(),
-          newsRes.json(),
-          studyPlansRes.json(),
-        ]);
-
-        // Helper function moved to top of try block so all sections can use it
-        const getFileUrl = (mediaField: any) => {
-          const path = mediaField?.url || mediaField?.data?.attributes?.url;
-          return path ? (path.startsWith('http') ? path : `${baseUrl}${path}`) : '#';
-        };
-
-        // 1. Format Staff
-        if (staffJson.data) {
-          const formattedStaff = staffJson.data.map((item: any) => {
-            const attrs = item.attributes || item;
-            const mediaImage = attrs.imageUrl || attrs.image || attrs.avatar;
-            const mediaCv = attrs.cvUrl || attrs.cvurl || attrs.cvDocument || attrs.cv;
-            
-            const imagePath = mediaImage?.url || mediaImage?.data?.attributes?.url;
-            const cvPath = mediaCv?.url || mediaCv?.data?.attributes?.url;
-
-            return {
-              name: attrs.name,
-              role: attrs.role,
-              specialty: attrs.specialty || '',
-              email: attrs.email || '',
-              bio: attrs.bio || '',
-              cvLabel: attrs.cvLabel || attrs.cvlabel || 'Download CV (PDF)',
-              qualifications: attrs.qualifications || [],
-              researchDirections: attrs.researchDirections || [],
-              experience: attrs.experience || [],
-              imageUrl: imagePath ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`) : '/accademics/image-not-hero.png',
-              cvUrl: cvPath ? (cvPath.startsWith('http') ? cvPath : `${baseUrl}${cvPath}`) : '#'
-            };
-          });
-          setStaffList(formattedStaff);
-        }
-
-        // 2. Format Events
-        if (eventsJson.data) {
-          const formattedEvents = eventsJson.data.map((item: any) => {
-            const attrs = item.attributes || item;
-            const media = attrs.imageUrl || attrs.image;
-            const imagePath = media?.url || media?.data?.attributes?.url;
-            
-            return {
-              id: item.id.toString(),
-              title: attrs.title,
-              description: attrs.description,
-              day: attrs.day,
-              month: attrs.month,
-              timeRange: attrs.timeRange,
-              href: attrs.href || '#',
-              imageUrl: imagePath ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`) : '/accademics/events/event-1.jpg'
-            };
-          });
-          setEventsList(formattedEvents);
-        }
-
-        // 3. Format News
-        if (newsJson.data) {
-          const formattedNews = newsJson.data.map((item: any) => {
-            const attrs = item.attributes || item;
-            const media = attrs.imageUrl || attrs.image;
-            const imagePath = media?.url || media?.data?.attributes?.url;
-            
-            return {
-              id: item.id.toString(),
-              title: attrs.title,
-              description: attrs.description,
-              href: attrs.href || '#',
-              imageUrl: imagePath ? (imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`) : '/accademics/news/news-1.jpg'
-            };
-          });
-          setNewsList(formattedNews);
-        }
-
-        // 4. Format Study Plans
-        if (studyPlansJson.data && studyPlansJson.data.length > 0) {
-          const attrs = studyPlansJson.data[0].attributes || studyPlansJson.data[0];
-
-          const getMultipleFiles = (mediaArray: any) => {
-            const items = mediaArray?.data || mediaArray || [];
-            if (!Array.isArray(items)) return [];
-            return items.map((file: any, index: number) => {
-              const path = file?.attributes?.url || file?.url;
-              const finalPath = path ? (path.startsWith('http') ? path : `${baseUrl}${path}`) : '#';
-              const name = file?.attributes?.name || file?.name || `Professional Diploma ${index + 1}`;
-              return { id: `prof-${index}`, title: name, url: finalPath };
-            });
+        const formattedStaff: AcademicStaffProfileCardProps[] = staffRows.map((member) => {
+          return {
+            title: member.title,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            position: member.position,
+            name: member.name,
+            role: member.role,
+            specialty: member.specialty || '',
+            department: member.department || member.role || '',
+            email: member.email || '',
+            bio: member.bio || '',
+            cvLabel: member.cvLabel || 'Download CV (PDF)',
+            googleScholarLink: member.googleScholarLink,
+            imageUrl: member.avatarUrl === '#' ? '/accademics/image-not-hero.png' : member.avatarUrl,
+            cvUrl: member.cvUrl,
           };
+        });
+
+        setStaffList(formattedStaff);
+        setEventsList(eventsRows);
+        setNewsList(newsRows);
 
           setUndergradConfig({
             mode: 'undergrad-specialties',
@@ -134,22 +71,22 @@ export default function Playground() {
               cs: {
                 label: 'Computer Science',
                 resourcesByCurriculum: {
-                  old: attrs.Undergrad_CS_Old_Curriculum ? [{ id: 'ug-cs-old', title: 'CS - Old Curriculum', url: getFileUrl(attrs.Undergrad_CS_Old_Curriculum) }] : [],
-                  new: attrs.Undergrad_CS_New_Curriculum ? [{ id: 'ug-cs-new', title: 'CS - New Curriculum', url: getFileUrl(attrs.Undergrad_CS_New_Curriculum) }] : [],
+                  old: studyPlanAttrs.Undergrad_CS_Old_Curriculum ? [{ id: 'ug-cs-old', title: 'CS - Old Curriculum', url: getFileUrl(studyPlanAttrs.Undergrad_CS_Old_Curriculum) }] : [],
+                  new: studyPlanAttrs.Undergrad_CS_New_Curriculum ? [{ id: 'ug-cs-new', title: 'CS - New Curriculum', url: getFileUrl(studyPlanAttrs.Undergrad_CS_New_Curriculum) }] : [],
                 },
               },
               is: {
                 label: 'Information System',
                 resourcesByCurriculum: {
-                  old: attrs.Undergrad_IS_Old_Curriculum ? [{ id: 'ug-is-old', title: 'IS - Old Curriculum', url: getFileUrl(attrs.Undergrad_IS_Old_Curriculum) }] : [],
-                  new: attrs.Undergrad_IS_New_Curriculum ? [{ id: 'ug-is-new', title: 'IS - New Curriculum', url: getFileUrl(attrs.Undergrad_IS_New_Curriculum) }] : [],
+                  old: studyPlanAttrs.Undergrad_IS_Old_Curriculum ? [{ id: 'ug-is-old', title: 'IS - Old Curriculum', url: getFileUrl(studyPlanAttrs.Undergrad_IS_Old_Curriculum) }] : [],
+                  new: studyPlanAttrs.Undergrad_IS_New_Curriculum ? [{ id: 'ug-is-new', title: 'IS - New Curriculum', url: getFileUrl(studyPlanAttrs.Undergrad_IS_New_Curriculum) }] : [],
                 },
               },
               ai: {
                 label: 'Artificial Intelligence',
                 resourcesByCurriculum: {
-                  old: attrs.Undergrad_AI_Old_Curriculum ? [{ id: 'ug-ai-old', title: 'AI - Old Curriculum', url: getFileUrl(attrs.Undergrad_AI_Old_Curriculum) }] : [],
-                  new: attrs.Undergrad_AI_New_Curriculum ? [{ id: 'ug-ai-new', title: 'AI - New Curriculum', url: getFileUrl(attrs.Undergrad_AI_New_Curriculum) }] : [],
+                  old: studyPlanAttrs.Undergrad_AI_Old_Curriculum ? [{ id: 'ug-ai-old', title: 'AI - Old Curriculum', url: getFileUrl(studyPlanAttrs.Undergrad_AI_Old_Curriculum) }] : [],
+                  new: studyPlanAttrs.Undergrad_AI_New_Curriculum ? [{ id: 'ug-ai-new', title: 'AI - New Curriculum', url: getFileUrl(studyPlanAttrs.Undergrad_AI_New_Curriculum) }] : [],
                 },
               },
             },
@@ -163,35 +100,33 @@ export default function Playground() {
                 type: 'research',
                 label: 'M. SC',
                 resourcesBySpecialty: {
-                  CS: attrs.Postgrad_CS ? [{ id: 'pg-msc-cs', title: 'MSc Computer Science', url: getFileUrl(attrs.Postgrad_CS) }] : [],
-                  IS: attrs.Postgrad_AI ? [{ id: 'pg-msc-is', title: 'MSc Artificial Intelligence', url: getFileUrl(attrs.Postgrad_AI) }] : [],
+                  CS: studyPlanAttrs.Postgrad_CS ? [{ id: 'pg-msc-cs', title: 'MSc Computer Science', url: getFileUrl(studyPlanAttrs.Postgrad_CS) }] : [],
+                  IS: studyPlanAttrs.Postgrad_AI ? [{ id: 'pg-msc-is', title: 'MSc Artificial Intelligence', url: getFileUrl(studyPlanAttrs.Postgrad_AI) }] : [],
                 },
               },
               phd: {
                 type: 'research',
                 label: 'PH.D',
                 resourcesBySpecialty: {
-                  CS: attrs.Postgrad_CS ? [{ id: 'pg-phd-cs', title: 'PhD Computer Science', url: getFileUrl(attrs.Postgrad_CS) }] : [],
-                  IS: attrs.Postgrad_AI ? [{ id: 'pg-phd-is', title: 'PhD Artificial Intelligence', url: getFileUrl(attrs.Postgrad_AI) }] : [],
+                  CS: studyPlanAttrs.Postgrad_CS ? [{ id: 'pg-phd-cs', title: 'PhD Computer Science', url: getFileUrl(studyPlanAttrs.Postgrad_CS) }] : [],
+                  IS: studyPlanAttrs.Postgrad_AI ? [{ id: 'pg-phd-is', title: 'PhD Artificial Intelligence', url: getFileUrl(studyPlanAttrs.Postgrad_AI) }] : [],
                 },
               },
               professional: {
                 type: 'professional',
                 label: 'Professional Degrees',
-                resources: getMultipleFiles(attrs.Professional_diplomas),
+                resources: getManyFileLinks(studyPlanAttrs.Professional_diplomas, 'prof'),
               },
             },
           });
-        }
-
       } catch (error) {
-        console.error('Error fetching data from Strapi:', error);
+        console.error('Error fetching data from Supabase:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchAllData();
+    void fetchAllData();
   }, []);
 
   return (
@@ -201,7 +136,7 @@ export default function Playground() {
       <section className="mx-auto w-full max-w-[1400px] px-4 pt-12 sm:px-8 lg:px-10">
         <h1 className="mb-6 text-center text-3xl font-bold text-emerald-400 sm:text-left">UI Playground</h1>
         <p className="mb-8 text-center text-slate-300 sm:text-left">
-          Live preview of the Collections loaded from the Strapi Backend.
+          Live preview of the collections loaded from Supabase.
         </p>
 
         <div className="mb-10 space-y-10">
@@ -218,7 +153,7 @@ export default function Playground() {
 
         {isLoading ? (
           <div className="flex justify-center p-8 text-emerald-400 text-xl font-medium animate-pulse">
-            Loading Data from Strapi...
+            Loading data from Supabase...
           </div>
         ) : staffList.length > 0 ? (
           <div className="flex flex-col gap-8">
@@ -250,7 +185,7 @@ export default function Playground() {
       <section className="mt-12 bg-white py-12">
         <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8 lg:px-10">
           <h2 className="mb-6 text-center text-3xl font-bold text-slate-900 sm:text-left">
-            Study Plans (Connected to Strapi)
+            Study Plans (Connected to Supabase)
           </h2>
           <div className="space-y-8">
             <NewStudyPlanResources config={undergradConfig} />

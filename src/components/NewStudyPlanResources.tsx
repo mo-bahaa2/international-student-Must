@@ -6,6 +6,8 @@ import type {
   StudyTrackSpecialty,
   UndergradSpecialtyKey,
 } from './newStudyPlanResourcesMockData';
+import { PdfResourceCard } from './PdfResourceCard';
+import { LinkResourceCard } from './LinkResourceCard';
 
 interface NewStudyPlanResourcesProps {
   config: StudyPlanResourceConfigUnion;
@@ -260,100 +262,25 @@ export default function NewStudyPlanResources({ config }: NewStudyPlanResourcesP
               const { href, title } = parseSharePointVideoLink(resource.url);
 
               return (
-                <a
+                <LinkResourceCard
                   key={resource.id}
                   href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-6 text-sky-700 transition-opacity hover:opacity-80 dark:border-slate-700 dark:bg-slate-800 dark:text-sky-300"
-                >
-                  <span className="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
-                    <VideoIcon className="h-8 w-8" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xl font-semibold underline break-words text-slate-900 dark:text-slate-100">
-                      {title || 'Video'}
-                    </p>
-                  </div>
-                  <ExternalLinkIcon className="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-300" />
-                </a>
+                  title={title || 'Video'}
+                />
               );
             }
 
             return (
-              <div
+              <PdfResourceCard
                 key={resource.id}
-                className="flex flex-col gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
-              >
-                <div className="flex-1 pb-4 border-b border-slate-100 dark:border-slate-700/50">
-                  <h4 className="text-xl font-semibold text-[#0A2540] dark:text-white">
-                    {resource.title}
-                  </h4>
-                </div>
-                
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider -mb-1 mt-1 dark:text-slate-400">PDF</p>
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <a
-                    href={resource.url}
-                    download
-                    className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-[#25325A] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1A2340] dark:bg-[#34467c] dark:hover:bg-[#2c3d6c]"
-                  >
-                    <i className="fa-solid fa-download text-lg"></i>
-                    Download PDF
-                  </a>
-                  <a
-                    href={resource.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg border-2 border-[#25325A] bg-white px-6 py-3 text-sm font-semibold text-[#25325A] transition-colors hover:bg-slate-50 dark:border-slate-400 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                  >
-                    <i className="fa-solid fa-arrow-up-right-from-square text-lg"></i>
-                    Open PDF
-                  </a>
-                </div>
-              </div>
+                title={resource.title}
+                url={resource.url}
+              />
             );
           })}
         </div>
       )}
     </section>
-  );
-}
-
-
-function VideoIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      className={className}
-      aria-hidden="true"
-    >
-      <rect x="3.5" y="5" width="12.5" height="14" rx="2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11 12 8.5 10.5v3L11 12Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m16 10 4-2v8l-4-2" />
-    </svg>
-  );
-}
-
-function ExternalLinkIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      className={className}
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14 5h5v5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 14 19 5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" />
-    </svg>
   );
 }
 

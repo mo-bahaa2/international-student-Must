@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import { supabase } from './supabase';
 
 const getApiBaseUrl = (): string => {
-  // In production: use VITE_API_BASE_URL (Strapi backend URL)
-  // In dev: VITE_API_URL would be /strapi (local proxy) or VITE_API_BASE_URL
+  // Optional external API base URL for non-Supabase endpoints (for example chat backends).
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   if (!baseUrl) {
@@ -45,16 +45,22 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  return config;
+});
+
+apiClient.interceptors.request.use(async (config) => {
   const skipAuth = (config as AxiosRequestConfig & { skipAuth?: boolean }).skipAuth === true;
   if (skipAuth) {
     return config;
   }
 
-  const token = localStorage.getItem('jwt');
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
@@ -62,7 +68,6 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('jwt');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
