@@ -101,7 +101,7 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
 
   return (
     <li
-      className={`group relative ${isTopLevel ? '' : 'w-full'}`}
+      className={`group relative ${isTopLevel ? 'shrink-0' : 'w-full'}`}
       onMouseEnter={() => hasChildren && onActivatePath(itemPath)}
     >
       {item.target === '_blank' ? (
@@ -379,12 +379,12 @@ export function HeroSlider() {
 
           <div
             ref={heroNavViewportRef}
-            className="w-[55vw] md:w-[50vw] overflow-x-clip overflow-y-visible"
-            style={{ marginInline: 'max(16px, 5vw)' }}
+            className="w-[85vw] md:w-[75vw] lg:w-[70vw] max-w-6xl overflow-x-clip overflow-y-visible"
+            style={{ marginInline: 'max(16px, 2vw)' }}
           >
             <ul
               ref={heroNavTrackRef}
-              className="flex min-w-max flex-nowrap justify-start gap-2 sm:gap-3 md:gap-3 px-1 py-1"
+              className="flex min-w-[max-content] flex-nowrap justify-start gap-2 sm:gap-3 md:gap-4 px-2 py-2 pr-6"
               style={{ transform: `translateX(-${heroNavOffset}px)`, transition: 'transform 300ms ease' }}
               onMouseLeave={resetHeroNavPath}
             >
