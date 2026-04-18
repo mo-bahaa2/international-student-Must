@@ -216,7 +216,19 @@ export function HeroSlider() {
       return;
     }
 
-    const maxOffset = Math.max(track.scrollWidth - viewport.clientWidth, 0);
+    let contentWidth = track.scrollWidth;
+    // Fallback manual sum to ensure robust calculation if flex scrollWidth under-reports
+    let manualWidth = 0;
+    for (let i = 0; i < track.children.length; i++) {
+        manualWidth += track.children[i].getBoundingClientRect().width;
+    }
+    // add gap estimates
+    manualWidth += track.children.length > 1 ? (track.children.length - 1) * 20 : 0;
+    manualWidth += 120; // safe buffer for padding
+
+    contentWidth = Math.max(contentWidth, manualWidth);
+
+    const maxOffset = Math.max(contentWidth - viewport.clientWidth, 0);
     setHeroNavMaxOffset(maxOffset);
     setHeroNavOffset((previousOffset) => Math.min(previousOffset, maxOffset));
   };
@@ -395,7 +407,7 @@ export function HeroSlider() {
           >
             <ul
               ref={heroNavTrackRef}
-              className="flex w-max flex-nowrap justify-start gap-2 sm:gap-3 md:gap-4 px-2 py-2 pr-20 md:pr-32"
+              className="flex min-w-[max-content] flex-nowrap justify-start gap-2 sm:gap-3 md:gap-4 px-2 py-2"
               style={{ transform: `translateX(-${heroNavOffset}px)`, transition: 'transform 300ms ease' }}
               onMouseLeave={resetHeroNavPath}
             >
@@ -408,6 +420,8 @@ export function HeroSlider() {
                   onActivatePath={activateHeroNavPath}
                 />
               ))}
+              {/* Spacer strictly for scroll bounding allowance */}
+              <li className="shrink-0 w-24 md:w-32 invisible h-px pointer-events-none" aria-hidden="true"></li>
             </ul>
           </div>
 
