@@ -255,10 +255,21 @@ export function HeroSlider() {
   useEffect(() => {
     recalculateHeroNavBounds();
 
+    const track = heroNavTrackRef.current;
+    let resizeObserver: ResizeObserver | null = null;
+    
+    if (track) {
+      resizeObserver = new ResizeObserver(() => {
+        recalculateHeroNavBounds();
+      });
+      resizeObserver.observe(track);
+    }
+
     const handleResize = () => recalculateHeroNavBounds();
     window.addEventListener('resize', handleResize);
 
     return () => {
+      if (resizeObserver) resizeObserver.disconnect();
       window.removeEventListener('resize', handleResize);
     };
   }, [visibleHeroNavTree.length]);
@@ -379,12 +390,12 @@ export function HeroSlider() {
 
           <div
             ref={heroNavViewportRef}
-            className="w-[85vw] md:w-[75vw] lg:w-[70vw] max-w-6xl overflow-x-clip overflow-y-visible"
+            className="w-[75vw] md:w-[65vw] lg:w-[60vw] max-w-4xl overflow-x-clip overflow-y-visible"
             style={{ marginInline: 'max(16px, 2vw)' }}
           >
             <ul
               ref={heroNavTrackRef}
-              className="flex min-w-[max-content] flex-nowrap justify-start gap-2 sm:gap-3 md:gap-4 px-2 py-2 pr-6"
+              className="flex w-max flex-nowrap justify-start gap-2 sm:gap-3 md:gap-4 px-2 py-2 pr-20 md:pr-32"
               style={{ transform: `translateX(-${heroNavOffset}px)`, transition: 'transform 300ms ease' }}
               onMouseLeave={resetHeroNavPath}
             >
