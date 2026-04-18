@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AcademicStaffProfileCard, { AcademicStaffProfileCardProps } from '../../../components/AcademicStaffProfileCard';
+import StaffAccordion from '../../../components/StaffAccordion';
 import { getAcademicStaffList } from '../../../services/cmsApi';
 
 export default function AcademicStaff() {
@@ -48,9 +49,39 @@ export default function AcademicStaff() {
       {isLoading ? (
         <div className="animate-pulse text-emerald-600">Loading Staff...</div>
       ) : staffList.length > 0 ? (
-        <div className="flex flex-col gap-8">
-          {staffList.map((member, index) => (
-            <AcademicStaffProfileCard key={index} {...member} />
+        <div className="flex flex-col gap-4">
+          {Object.entries(
+            staffList.reduce((acc, member) => {
+              const r = [member.role, member.title, member.name].filter(Boolean).join(' ').toLowerCase();
+              let roleGroup = 'Academic Staff';
+              
+              if (r.includes('assistant lecturer')) {
+                roleGroup = 'Assistant Lecturers';
+              } else if (r.includes('lecturer')) {
+                roleGroup = 'Lecturers';
+              } else if (r.includes('asst') && r.includes('prof')) {
+                roleGroup = 'Assistant Professors';
+              } else if (r.includes('prof')) {
+                roleGroup = 'Professors';
+              } else if (r.includes('teaching assistant')) {
+                roleGroup = 'Teaching Assistants';
+              } else if (r.includes('demonstrator')) {
+                roleGroup = 'Demonstrators';
+              } else if (member.role) {
+                roleGroup = member.role;
+              }
+
+              if (!acc[roleGroup]) acc[roleGroup] = [];
+              acc[roleGroup].push(member);
+              return acc;
+            }, {} as Record<string, AcademicStaffProfileCardProps[]>)
+          ).map(([roleName, members], index) => (
+            <StaffAccordion
+              key={roleName}
+              roleName={roleName}
+              staffList={members}
+              defaultOpen={index === 0}
+            />
           ))}
         </div>
       ) : (
