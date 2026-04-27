@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import ActivitiesSection from '../components/ActivitiesSection';
 import { AdDetailCard } from '../components/AdDetailCard';
 import { getActivitiesList, type ActivityType, type NewsCardItem } from '../services/cmsApi';
 
@@ -63,15 +62,6 @@ export default function ActivitiesPage() {
     void fetchActivities();
   }, [routeConfig.activityType]);
 
-  const featuredActivity = activities[0];
-  const listActivities = activities.slice(1).map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    imageUrl: item.imageUrl,
-    href: item.href,
-  }));
-
   return (
     <div className="min-h-screen bg-white py-24 pt-32 dark:bg-[#070d19]">
       <div className="mx-auto w-full max-w-[1600px] px-6 sm:px-12">
@@ -86,22 +76,15 @@ export default function ActivitiesPage() {
           </div>
         ) : activities.length ? (
           <div className="space-y-8">
-            {featuredActivity && (
+            {activities.map((item) => (
               <AdDetailCard
-                image={featuredActivity.imageUrl}
-                title={featuredActivity.title}
-                description={featuredActivity.description}
-                href={featuredActivity.href}
+                key={item.id}
+                image={item.imageUrl}
+                title={item.title}
+                description={item.description || ''}
+                href={item.href}
               />
-            )}
-
-            {listActivities.length > 0 && (
-              <ActivitiesSection
-                title={routeConfig.title}
-                subtitle={routeConfig.subtitle}
-                items={listActivities}
-              />
-            )}
+            ))}
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-600 dark:border-slate-700 dark:text-slate-300">
