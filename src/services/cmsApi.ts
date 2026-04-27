@@ -211,9 +211,17 @@ const DEFAULT_HERO_NAV_TREE: HeroNavTreeItem[] = [
     target: '_self',
     accessRole: 'public',
     children: [
-      { title: 'Cultural', url: '/cultural', target: '_self', accessRole: 'public', children: [] },
-      { title: 'Sports', url: '/sports', target: '_self', accessRole: 'public', children: [] },
-      { title: 'Art', url: '/art', target: '_self', accessRole: 'public', children: [] },
+      {
+        title: 'Student Activity',
+        url: '/activities',
+        target: '_self',
+        accessRole: 'public',
+        children: [
+          { title: 'Cultural', url: '/cultural', target: '_self', accessRole: 'public', children: [] },
+          { title: 'Sports', url: '/sports', target: '_self', accessRole: 'public', children: [] },
+          { title: 'Art', url: '/art', target: '_self', accessRole: 'public', children: [] },
+        ],
+      },
       { title: 'Student Clubs', url: '/student-clubs', target: '_self', accessRole: 'public', children: [] },
     ],
   },
@@ -827,7 +835,7 @@ export async function getActivitiesList(activityType?: ActivityType): Promise<Ne
   let query = supabase
     .from(TABLES.activities)
     .select('*')
-    .eq('is_published', true)
+    // .eq('is_published', true)
     .order('published_at', { ascending: false })
     .order('created_at', { ascending: false });
 

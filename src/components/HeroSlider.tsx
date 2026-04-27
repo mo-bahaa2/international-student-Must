@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getHeroSlides, type HeroNavTreeItem } from '../services/cmsApi';
-import { STATIC_MENU_ITEMS } from './LinksBar';
+import { STATIC_MENU_ITEMS, type MenuItem } from './LinksBar';
 import { useAuth } from '../context/AuthContext';
 
 type SliderImage = {
@@ -18,19 +18,15 @@ type LocalHeroNavTreeItem = HeroNavTreeItem;
 
 type MenuAccessRole = 'public' | 'visitor' | 'college-member';
 
-const STATIC_HERO_NAV_TREE: LocalHeroNavTreeItem[] = STATIC_MENU_ITEMS.map((item) => ({
+const mapMenuItem = (item: MenuItem): LocalHeroNavTreeItem => ({
   title: item.label,
   url: item.to,
   target: '_self',
   accessRole: 'public',
-  children: (item.children || []).map((child) => ({
-    title: child.label,
-    url: child.to,
-    target: '_self',
-    accessRole: 'public',
-    children: [],
-  })),
-}));
+  children: (item.children || []).map(mapMenuItem),
+});
+
+const STATIC_HERO_NAV_TREE: LocalHeroNavTreeItem[] = STATIC_MENU_ITEMS.map(mapMenuItem);
 
 const normalizeNavPath = (url: string) => {
   const trimmed = url.trim();
@@ -97,7 +93,13 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
         isOpen ? 'text-[#00AC5C] bg-white/15 border-white/20' : 'bg-white/0 text-white hover:text-[#00AC5C]'
       }`;
 
-  const iconClassName = `h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#00AC5C]' : 'rotate-0 text-current'}`;
+  const iconClassName = `h-4 w-4 transition-transform duration-300 ${
+    isTopLevel
+      ? isOpen ? 'rotate-180 text-[#00AC5C]' : 'rotate-0 text-current'
+      : isOpen ? 'translate-x-1 text-[#00AC5C]' : 'translate-x-0 text-current'
+  }`;
+
+  const Icon = isTopLevel ? ChevronDown : ChevronRight;
 
   return (
     <li
@@ -112,12 +114,12 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
           className={itemClassName}
         >
           <span className={labelClassName}>{item.title}</span>
-          {hasChildren && <ChevronDown aria-hidden="true" strokeWidth={2.6} className={iconClassName} />}
+          {hasChildren && <Icon aria-hidden="true" strokeWidth={2.6} className={iconClassName} />}
         </a>
       ) : (
         <Link to={item.url} className={itemClassName}>
           <span className={labelClassName}>{item.title}</span>
-          {hasChildren && <ChevronDown aria-hidden="true" strokeWidth={2.6} className={iconClassName} />}
+          {hasChildren && <Icon aria-hidden="true" strokeWidth={2.6} className={iconClassName} />}
         </Link>
       )}
 
