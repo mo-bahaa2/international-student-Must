@@ -16,7 +16,7 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<StrapiUser>;
-  register: (payload: RegisterPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<{ requiresEmailVerification: boolean }>;
   logout: () => Promise<void>;
   isAdmin: boolean;
   isCollegeMember: boolean;
@@ -145,8 +145,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const auth = await registerRequest(payload);
-      setToken(auth.jwt);
-      setUser(auth.user);
+      if (auth.jwt) {
+        setToken(auth.jwt);
+        setUser(auth.user);
+      } else {
+        clearSession();
+      }
+
+      return {
+        requiresEmailVerification: Boolean(auth.requiresEmailVerification),
+      };
     } finally {
       setIsLoading(false);
     }

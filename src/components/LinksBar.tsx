@@ -12,7 +12,16 @@ type MenuItem = {
 };
 
 export const STATIC_MENU_ITEMS: MenuItem[] = [
-  { label: 'Home', to: '/' },
+  {
+    label: 'Home',
+    to: '/home',
+    children: [
+      { label: 'About Sector', to: '/home#about-sector' },
+      { label: 'Mission', to: '/home#mission' },
+      { label: 'Vision', to: '/home#vision' },
+      { label: 'Sector Plan', to: '/home#sector-plan' },
+    ],
+  },
   {
     label: 'Academics',
     to: '/academics',

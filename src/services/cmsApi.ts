@@ -23,6 +23,7 @@ const TABLES = {
   advisorResources: getTable('VITE_SUPABASE_ADVISOR_RESOURCES_TABLE', 'advisor_resources'),
   announcements: getTable('VITE_SUPABASE_ANNOUNCEMENTS_TABLE', ''),
   contactUs: getTable('VITE_SUPABASE_CONTACT_US_TABLE', ''),
+  homeSections: getTable('VITE_SUPABASE_HOME_SECTIONS_TABLE', 'home_sections'),
   activities: getTable('VITE_SUPABASE_ACTIVITIES_TABLE', 'activities'),
   staff: getTable('VITE_SUPABASE_STAFF_TABLE', 'staff'),
   events: getTable('VITE_SUPABASE_EVENTS_TABLE', 'events'),
@@ -49,6 +50,8 @@ const STORAGE_BUCKETS = {
   calendars: getTable('VITE_SUPABASE_CALENDAR_FILES_BUCKET', 'calendar-files'),
   gallery: getTable('VITE_SUPABASE_GALLERY_BUCKET', 'gallery'),
   avatars: getTable('VITE_SUPABASE_AVATARS_BUCKET', 'avatars'),
+  homeImages: getTable('VITE_SUPABASE_HOME_IMAGES_BUCKET', 'home-images'),
+  homeFiles: getTable('VITE_SUPABASE_HOME_FILES_BUCKET', 'home-files'),
 } as const;
 
 export type EventCardItem = {
@@ -79,6 +82,35 @@ export type HeroSlideItem = {
   src: string;
   title: string;
 };
+
+export type HomeSectionKey = 'about-sector' | 'mission' | 'vision' | 'sector-plan';
+
+export type HomeSectionContent = {
+  sectionKey: HomeSectionKey;
+  title: string | null;
+  contentText: string | null;
+  imageUrl: string | null;
+  fileUrl: string | null;
+  updatedAt: string | null;
+};
+
+function normalizeHomeSectionKey(value: unknown): HomeSectionKey | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase().replace(/[_\s]+/g, '-');
+  if (
+    normalized === 'about-sector' ||
+    normalized === 'mission' ||
+    normalized === 'vision' ||
+    normalized === 'sector-plan'
+  ) {
+    return normalized;
+  }
+
+  return null;
+}
 
 export type ScheduleItem = {
   id: string;
@@ -948,6 +980,51 @@ export async function getHeroSlides(): Promise<HeroSlideItem[]> {
     .filter((item): item is HeroSlideItem & { order: number } => item !== null)
     .sort((a, b) => a.order - b.order)
     .map(({ order: _order, ...slide }) => slide);
+}
+
+export async function getHomeSectionsContent(): Promise<Partial<Record<HomeSectionKey, HomeSectionContent>>> {
+  const { data, error } = await supabase
+    .from(TABLES.homeSections)
+    .select('*')
+    .in('section_key', ['about-sector', 'mission', 'vision', 'sector-plan']);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return {};
+    }
+
+    throw new Error(error.message);
+  }
+
+  const rows = (data || []).map((raw) => unwrapRow(raw) as Record<string, unknown>);
+  const mapped: Partial<Record<HomeSectionKey, HomeSectionContent>> = {};
+
+  rows.forEach((row) => {
+    const sectionKey = normalizeHomeSectionKey(pickString(row.section_key, row.sectionKey));
+    if (!sectionKey) {
+      return;
+    }
+
+    const imagePath = pickString(row.image_path, row.imagePath);
+    const filePath = pickString(row.file_path, row.filePath);
+    const imageUrl = imagePath
+      ? supabase.storage.from(STORAGE_BUCKETS.homeImages).getPublicUrl(imagePath).data.publicUrl
+      : null;
+    const fileUrl = filePath
+      ? supabase.storage.from(STORAGE_BUCKETS.homeFiles).getPublicUrl(filePath).data.publicUrl
+      : null;
+
+    mapped[sectionKey] = {
+      sectionKey,
+      title: pickString(row.title) || null,
+      contentText: pickString(row.content_text, row.contentText) || null,
+      imageUrl,
+      fileUrl,
+      updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+    };
+  });
+
+  return mapped;
 }
 
 function normalizeMenuNode(raw: unknown): HeroNavTreeItem | null {

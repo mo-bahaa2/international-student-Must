@@ -45,7 +45,7 @@ export function Register() {
 
     setIsSubmitting(true);
     try {
-      await register({
+      const result = await register({
         username: username.trim(),
         email: email.trim(),
         password,
@@ -53,7 +53,18 @@ export function Register() {
         role: roleTab,
         universityId: roleTab === 'college-member' ? universityId.trim() : undefined,
       });
-      navigate('/profile');
+      if (result.requiresEmailVerification) {
+        navigate('/login', {
+          replace: true,
+          state: {
+            registrationMessage: `We sent a verification email to ${email.trim()}. Verify your email, then log in.`,
+            registeredEmail: email.trim(),
+          },
+        });
+        return;
+      }
+
+      navigate('/home');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed.');
     } finally {
@@ -113,7 +124,11 @@ export function Register() {
       </p>
 
       <form onSubmit={onSubmit} className="space-y-4">
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         <div>
           <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">Display name</label>

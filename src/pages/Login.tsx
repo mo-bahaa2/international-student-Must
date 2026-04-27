@@ -1,17 +1,24 @@
 import { FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthCampusLayout, authGlassInputClassName, authPrimaryButtonClassName } from '../components/AuthCampusLayout';
 import { ROLES } from '../constants/roles';
 import { useAuth } from '../context/AuthContext';
 
 type LoginPortalTab = 'student' | 'admin';
 
+type LoginLocationState = {
+  registrationMessage?: string;
+  registeredEmail?: string;
+};
+
 export function Login() {
   const { login, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = (location.state as LoginLocationState | null) || null;
 
   const [portalTab, setPortalTab] = useState<LoginPortalTab>('student');
-  const [identifier, setIdentifier] = useState('');
+  const [identifier, setIdentifier] = useState(locationState?.registeredEmail || '');
   const [password, setPassword] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -23,7 +30,7 @@ export function Login() {
     setServerError(null);
 
     if (!identifier.trim() || !password.trim()) {
-      setFieldError('Identifier and password are required.');
+      setFieldError('Email and password are required.');
       return;
     }
 
@@ -44,7 +51,7 @@ export function Login() {
         return;
       }
 
-      navigate('/profile');
+      navigate('/home');
     } catch (error) {
       setServerError(error instanceof Error ? error.message : 'Login failed.');
     } finally {
@@ -55,7 +62,13 @@ export function Login() {
   return (
     <AuthCampusLayout>
       <h1 className="mb-1 text-3xl font-bold tracking-tight text-stone-900 dark:text-white">Login</h1>
-      <p className="mb-5 text-sm text-stone-600 dark:text-stone-300">Welcome back — sign in to continue.</p>
+      <p className="mb-5 text-sm text-stone-600 dark:text-stone-300">Welcome back - sign in to continue.</p>
+
+      {locationState?.registrationMessage && (
+        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {locationState.registrationMessage}
+        </div>
+      )}
 
       <div
         className="mb-6 flex rounded-xl border border-stone-200/80 bg-stone-100/45 p-1 shadow-inner backdrop-blur-sm dark:border-slate-600/60 dark:bg-slate-800/45"
@@ -104,17 +117,25 @@ export function Login() {
           : 'For platform administrators only.'}
       </p>
 
-      {fieldError && <p className="mb-3 text-sm text-red-600">{fieldError}</p>}
-      {serverError && <p className="mb-3 text-sm text-red-600">{serverError}</p>}
+      {fieldError && (
+        <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {fieldError}
+        </div>
+      )}
+      {serverError && (
+        <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {serverError}
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">Email or Username</label>
+          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">Email</label>
           <input
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             className={authGlassInputClassName}
-            placeholder="Enter your email or username"
+            placeholder="Enter your email"
           />
         </div>
 
