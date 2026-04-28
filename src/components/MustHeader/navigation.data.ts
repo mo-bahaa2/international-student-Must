@@ -145,7 +145,8 @@ export const MENU_ITEMS: MenuItem[] = [
       { label: 'MUST Life', translationKey: 'mustLife', externalUrl: 'https://must.edu.eg/must-life/' },
       { label: 'MUST Stars', translationKey: 'mustStars', externalUrl: 'https://must.edu.eg/stars/' },
       { label: 'MUST Clubs', translationKey: 'mustClubs', externalUrl: 'https://must.edu.eg/clubs/' },
-      { label: 'Facilities', translationKey: 'facilities', externalUrl: 'https://must.edu.eg/facilities/' }
+      { label: 'Must Facilities', translationKey: 'facilities', routerLink: '/facilities' },
+      { label: 'International Handbook', translationKey: 'internationalHandbook', routerLink: '/international-handbook' }
     ]
   },
   {

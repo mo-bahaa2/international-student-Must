@@ -23,6 +23,7 @@ const TABLES = {
   advisorResources: getTable('VITE_SUPABASE_ADVISOR_RESOURCES_TABLE', 'advisor_resources'),
   announcements: getTable('VITE_SUPABASE_ANNOUNCEMENTS_TABLE', ''),
   contactUs: getTable('VITE_SUPABASE_CONTACT_US_TABLE', ''),
+  homeSections: getTable('VITE_SUPABASE_HOME_SECTIONS_TABLE', 'home_sections'),
   activities: getTable('VITE_SUPABASE_ACTIVITIES_TABLE', 'activities'),
   staff: getTable('VITE_SUPABASE_STAFF_TABLE', 'staff'),
   events: getTable('VITE_SUPABASE_EVENTS_TABLE', 'events'),
@@ -32,11 +33,11 @@ const TABLES = {
   calendars: getTable('VITE_SUPABASE_CALENDARS_TABLE', 'calendars'),
   heroSlides: getTable('VITE_SUPABASE_GALLERY_TABLE', 'photo_gallery'),
   honorListDocs: getTable('VITE_SUPABASE_STUDENT_HONOR_LIST_TABLE', 'student_honor_list_documents'),
+  facilities: getTable('VITE_SUPABASE_FACILITIES_TABLE', 'facilities'),
   // Intentionally no default to avoid 404s when this table is not provisioned yet.
   heroMenus: getTable('VITE_SUPABASE_HERO_MENU_TABLE', ''),
   importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_TABLE', 'important_links'),
   academicAdvising: getTable('VITE_SUPABASE_ACADEMIC_ADVISING_TABLE', 'academic_advising'),
-  homeSections: getTable('VITE_SUPABASE_HOME_SECTIONS_TABLE', 'home_sections'),
   internationalHandbook: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_TABLE', 'international_handbook_documents'),
   smartElearning: getTable('VITE_SUPABASE_SMART_ELEARNING_TABLE', 'smart_elearning_videos'),
   contactInfo: getTable('VITE_SUPABASE_CONTACT_INFO_TABLE', 'contact_information'),
@@ -168,6 +169,55 @@ export type HeroSlideItem = {
   src: string;
   title: string;
 };
+
+export type HomeSectionKey = 'about-sector' | 'mission' | 'vision' | 'sector-plan';
+
+export type HomeSectionContent = {
+  sectionKey: HomeSectionKey;
+  title: string | null;
+  contentText: string | null;
+  imageUrl: string | null;
+  fileUrl: string | null;
+  updatedAt: string | null;
+};
+
+export type FacilitiesSectionType = 'must-facilities' | 'international-students-handbook';
+
+export type FacilityItem = {
+  id: string;
+  sectionType: FacilitiesSectionType;
+  title: string;
+  contentHtml: string;
+  thumbnailUrl: string | null;
+  galleryUrls: string[];
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type InternationalHandbookItem = {
+  key: string;
+  title: string;
+  fileUrl: string;
+  updatedAt: string | null;
+};
+
+function normalizeHomeSectionKey(value: unknown): HomeSectionKey | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase().replace(/[_\s]+/g, '-');
+  if (
+    normalized === 'about-sector' ||
+    normalized === 'mission' ||
+    normalized === 'vision' ||
+    normalized === 'sector-plan'
+  ) {
+    return normalized;
+  }
+
+  return null;
+}
 
 export type ScheduleItem = {
   id: string;
@@ -1288,6 +1338,165 @@ export async function getHeroSlides(): Promise<HeroSlideItem[]> {
     .map(({ order: _order, ...slide }) => slide);
 }
 
+export async function getHomeSectionsContent(): Promise<Partial<Record<HomeSectionKey, HomeSectionContent>>> {
+  const { data, error } = await supabase
+    .from(TABLES.homeSections)
+    .select('*')
+    .in('section_key', ['about-sector', 'mission', 'vision', 'sector-plan']);
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return {};
+    }
+
+    throw new Error(error.message);
+  }
+
+  const rows = (data || []).map((raw) => unwrapRow(raw) as Record<string, unknown>);
+  const mapped: Partial<Record<HomeSectionKey, HomeSectionContent>> = {};
+
+  rows.forEach((row) => {
+    const sectionKey = normalizeHomeSectionKey(pickString(row.section_key, row.sectionKey));
+    if (!sectionKey) {
+      return;
+    }
+
+    const imagePath = pickString(row.image_path, row.imagePath);
+    const filePath = pickString(row.file_path, row.filePath);
+    const imageUrl = imagePath
+      ? supabase.storage.from(STORAGE_BUCKETS.homeImages).getPublicUrl(imagePath).data.publicUrl
+      : null;
+    const fileUrl = filePath
+      ? supabase.storage.from(STORAGE_BUCKETS.homeFiles).getPublicUrl(filePath).data.publicUrl
+      : null;
+
+    mapped[sectionKey] = {
+      sectionKey,
+      title: pickString(row.title) || null,
+      contentText: pickString(row.content_text, row.contentText) || null,
+      imageUrl,
+      fileUrl,
+      updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+    };
+  });
+
+  return mapped;
+}
+
+export async function getFacilitiesSections(sectionType: FacilitiesSectionType): Promise<FacilityItem[]> {
+  const { data, error } = await supabase
+    .from(TABLES.facilities)
+    .select('*')
+    .eq('section_type', sectionType)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const thumbnailPath = pickString(row.thumbnail_path, row.thumbnailPath);
+    const galleryPaths = Array.isArray(row.gallery_paths) ? row.gallery_paths : Array.isArray(row.galleryPaths) ? row.galleryPaths : [];
+
+    return {
+      id: toId(row.id),
+      sectionType: (pickString(row.section_type, row.sectionType) as FacilitiesSectionType) || sectionType,
+      title: pickString(row.title) || 'Facility',
+      contentHtml: pickString(row.content_html, row.contentHtml) || '',
+      thumbnailUrl: thumbnailPath
+        ? supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(thumbnailPath).data.publicUrl
+        : null,
+      galleryUrls: galleryPaths
+        .filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
+        .map((path) => supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(path).data.publicUrl),
+      createdAt: pickString(row.created_at, row.createdAt) || null,
+      updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+    };
+  });
+}
+
+export async function getFacilityById(id: string): Promise<FacilityItem | null> {
+  const trimmedId = id.trim();
+  if (!trimmedId) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from(TABLES.facilities)
+    .select('*')
+    .eq('id', trimmedId)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return null;
+    }
+
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = unwrapRow(data) as Record<string, unknown>;
+  const thumbnailPath = pickString(row.thumbnail_path, row.thumbnailPath);
+  const galleryPaths = Array.isArray(row.gallery_paths) ? row.gallery_paths : Array.isArray(row.galleryPaths) ? row.galleryPaths : [];
+
+  return {
+    id: toId(row.id),
+    sectionType: (pickString(row.section_type, row.sectionType) as FacilitiesSectionType) || 'must-facilities',
+    title: pickString(row.title) || 'Facility',
+    contentHtml: pickString(row.content_html, row.contentHtml) || '',
+    thumbnailUrl: thumbnailPath
+      ? supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(thumbnailPath).data.publicUrl
+      : null,
+    galleryUrls: galleryPaths
+      .filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
+      .map((path) => supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(path).data.publicUrl),
+    createdAt: pickString(row.created_at, row.createdAt) || null,
+    updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+  };
+}
+
+export async function getInternationalHandbookDocument(): Promise<InternationalHandbookItem | null> {
+  const { data, error } = await supabase
+    .from(getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_TABLE', 'international_handbook_documents'))
+    .select('*')
+    .eq('key', 'current')
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return null;
+    }
+
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = unwrapRow(data) as Record<string, unknown>;
+  const filePath = pickString(row.file_path, row.filePath);
+  if (!filePath) {
+    return null;
+  }
+
+  return {
+    key: pickString(row.key) || 'current',
+    title: pickString(row.title) || 'International Handbook',
+    fileUrl: supabase.storage.from(STORAGE_BUCKETS.internationalHandbookFiles).getPublicUrl(filePath).data.publicUrl,
+    updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+  };
+}
+
 function normalizeMenuNode(raw: unknown): HeroNavTreeItem | null {
   if (!isObject(raw)) {
     return null;
@@ -1405,6 +1614,10 @@ export function getCmsMediaUrl(path: string): string {
     bucketName = STORAGE_BUCKETS.calendars;
   } else if (lowerSegment === 'avatars') {
     bucketName = STORAGE_BUCKETS.avatars;
+  } else if (lowerSegment === 'facilities' || lowerSegment === 'facility') {
+    bucketName = STORAGE_BUCKETS.facilitiesImages;
+  } else if (lowerSegment === 'international-handbook' || lowerSegment === 'international_handbook' || lowerSegment === 'handbook') {
+    bucketName = STORAGE_BUCKETS.internationalHandbookFiles;
   }
 
   if (bucketName) {

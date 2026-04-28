@@ -89,8 +89,8 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
     ? `px-6 h-12 rounded-full bg-white/20 backdrop-blur-md text-white text-sm md:text-base font-bold inline-flex items-center justify-center gap-2 transition-all duration-300 ${
         isOpen ? 'text-[#00AC5C] border-[#00AC5C]/60 bg-white/18 shadow-[0_12px_24px_rgba(0,0,0,0.25)]' : 'hover:text-[#00AC5C] hover:border-[#00AC5C]/55 hover:bg-white/20'
       }`
-    : `w-full text-left px-4 py-2.5 rounded-xl border border-transparent bg-white/0 text-white font-bold transition-all duration-300 inline-flex items-center justify-between gap-2 ${
-        isOpen ? 'text-[#00AC5C] bg-white/15 border-white/20' : 'hover:text-[#00AC5C]'
+    : `w-full text-left px-4 py-2.5 rounded-xl border border-transparent font-bold transition-all duration-300 inline-flex items-center justify-between gap-2 ${
+        isOpen ? 'text-[#00AC5C] bg-white/15 border-white/20' : 'bg-white/0 text-white hover:text-[#00AC5C]'
       }`;
 
   const iconClassName = `h-4 w-4 transition-transform duration-300 ${
@@ -125,13 +125,13 @@ function HeroNavMenuNode({ item, path, activePath, onActivatePath, level = 0 }: 
 
       {hasChildren && (
         <ul
-          className={`px-4 py-2 flex flex-col min-w-[220px] bg-[#1f3769] border border-[#284884] rounded-xl shadow-xl z-30 transition-all duration-500 ease-out ${
-            isTopLevel ? 'absolute left-1/2 top-full mt-3 -translate-x-1/2' : 'absolute left-full top-0 ml-3'
+          className={`z-30 flex flex-col transition-all duration-500 ease-out ${
+            isTopLevel ? 'absolute left-0 top-full mt-3' : 'absolute left-full top-0 ml-3'
           } ${
             isOpen
               ? 'opacity-100 visible translate-y-0 scale-100 pointer-events-auto'
               : 'opacity-0 invisible translate-y-2 scale-95 pointer-events-none'
-          }`}
+          } min-w-[220px] rounded-xl border border-[#284884] bg-[#1f3769] px-4 py-2 shadow-xl`}
         >
           {item.children.map((child) => (
             <HeroNavMenuNode

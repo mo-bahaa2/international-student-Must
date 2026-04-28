@@ -12,7 +12,16 @@ export type MenuItem = {
 };
 
 export const STATIC_MENU_ITEMS: MenuItem[] = [
-  { label: 'Home', to: '/' },
+  {
+    label: 'Home',
+    to: '/home',
+    children: [
+      { label: 'About Sector', to: '/home#about-sector' },
+      { label: 'Mission', to: '/home#mission' },
+      { label: 'Vision', to: '/home#vision' },
+      { label: 'Sector Plan', to: '/home#sector-plan' },
+    ],
+  },
   {
     label: 'Academics',
     to: '/academics',
@@ -47,7 +56,14 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
       { label: 'Student Clubs', to: '/student-clubs' },
     ],
   },
-  { label: 'Facilities', to: '/facilities' },
+  {
+    label: 'Facilities',
+    to: '/facilities',
+    children: [
+      { label: 'Must Facilities', to: '/facilities' },
+      { label: 'International Handbook', to: '/international-handbook' },
+    ],
+  },
   { label: 'News', to: '/news' },
   { label: 'Events', to: '/events' },
   { label: 'Important Links', to: '/important-links' },

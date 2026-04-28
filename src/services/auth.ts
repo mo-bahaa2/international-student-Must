@@ -26,6 +26,7 @@ export interface StrapiUser {
 interface AuthResponse {
   jwt: string | null;
   user: StrapiUser;
+  requiresEmailVerification?: boolean;
 }
 
 type ProfileRow = {
@@ -241,6 +242,10 @@ function normalizeAuthError(err: unknown, mode: 'login' | 'register'): Error {
     return new Error('Invalid email/username or password.');
   }
 
+  if (mode === 'login' && /email not confirmed|email not verified|confirm your email/i.test(message)) {
+    return new Error('Your email is not verified yet. Please open the verification email, then sign in again.');
+  }
+
   return new Error(message || 'Authentication failed.');
 }
 
@@ -347,10 +352,14 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
       console.warn('Profile sync failed during registration. Continuing with auth user.', profileError);
     }
 
-    let accessToken = data.session?.access_token || null;
+    const accessToken = data.session?.access_token || null;
     if (!accessToken) {
-      const loginResponse = await login(payload.email, payload.password);
-      return loginResponse;
+      const user = await buildCurrentUser(data.user);
+      return {
+        jwt: null,
+        user,
+        requiresEmailVerification: true,
+      };
     }
 
     const user = await buildCurrentUser(data.user);

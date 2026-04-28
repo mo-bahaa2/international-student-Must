@@ -22,6 +22,8 @@ import HonorList from './pages/Accademics/homepage/HonorList';
 import Questionnaires from './pages/Questionnaires';
 import { Resources } from './pages/Resources';
 import { Facilities } from './pages/Facilities';
+import { FacilityDetails } from './pages/FacilityDetails';
+import { InternationalHandbook } from './pages/InternationalHandbook';
 import { Announcements } from './pages/Announcements';
 import { Notifications } from './pages/Notifications';
 import { ContactUs } from './pages/ContactUs';
@@ -116,6 +118,8 @@ function AppContent() {
               <Route path="/questionnaires" element={<Questionnaires />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/facilities" element={<Facilities />} />
+              <Route path="/facilities/:facilityId" element={<FacilityDetails />} />
+              <Route path="/international-handbook" element={<InternationalHandbook />} />
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/contactus" element={<ContactUs />} />
