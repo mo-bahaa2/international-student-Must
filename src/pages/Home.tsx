@@ -11,7 +11,12 @@ import {
 } from 'lucide-react';
 import { getHomeSectionsContent, type HomeSectionContent } from '../services/cmsApi';
 
-const sectionImageClassName = 'h-full min-h-[280px] w-full rounded-[2rem] object-cover shadow-2xl shadow-slate-900/15';
+const aboutSectorPhotoFrameClassName =
+  'relative flex aspect-[2/3] h-[260px] w-auto shrink-0 items-center justify-center sm:h-[300px] lg:h-[340px]';
+const aboutSectorPhotoGlowClassName =
+  'pointer-events-none absolute -inset-10 z-0 rounded-[2.5rem] bg-[linear-gradient(135deg,rgba(59,130,246,0.07),rgba(96,165,250,0.09),rgba(37,99,235,0.06))] blur-2xl dark:bg-[linear-gradient(135deg,rgba(30,64,175,0.12),rgba(59,130,246,0.1),rgba(30,58,138,0.1))]';
+const aboutSectorPhotoClassName =
+  'relative z-[1] h-full w-full max-h-full max-w-full object-contain drop-shadow-[0_20px_45px_rgba(15,23,42,0.28)] dark:drop-shadow-[0_22px_50px_rgba(0,0,0,0.55)]';
 
 const homeContent = {
   about: {
@@ -203,10 +208,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="order-1 lg:order-2">
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-[2.2rem] bg-[linear-gradient(135deg,rgba(16,185,129,0.12),rgba(59,130,246,0.08))] blur-xl" />
-              <img src={aboutImage} alt="About sector" className={`relative ${sectionImageClassName}`} />
+          <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
+            <div className={aboutSectorPhotoFrameClassName}>
+              <div className={aboutSectorPhotoGlowClassName} aria-hidden />
+              <img src={aboutImage} alt="About sector" className={aboutSectorPhotoClassName} />
             </div>
           </div>
         </section>

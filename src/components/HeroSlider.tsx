@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getHeroSlides, type HeroNavTreeItem } from '../services/cmsApi';
-import { STATIC_MENU_ITEMS, type MenuItem } from './LinksBar';
+import { getMenuItemsForRole, type MenuItem } from './LinksBar';
 import { useAuth } from '../context/AuthContext';
 
 type SliderImage = {
@@ -25,8 +25,6 @@ const mapMenuItem = (item: MenuItem): LocalHeroNavTreeItem => ({
   accessRole: 'public',
   children: (item.children || []).map(mapMenuItem),
 });
-
-const STATIC_HERO_NAV_TREE: LocalHeroNavTreeItem[] = STATIC_MENU_ITEMS.map(mapMenuItem);
 
 const normalizeNavPath = (url: string) => {
   const trimmed = url.trim();
@@ -153,7 +151,6 @@ export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [slides, setSlides] = useState<SliderImage[]>([]);
-  const [heroNavTree] = useState<LocalHeroNavTreeItem[]>(STATIC_HERO_NAV_TREE);
   const [activeHeroNavPath, setActiveHeroNavPath] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
@@ -163,6 +160,10 @@ export function HeroSlider() {
   const [heroNavOffset, setHeroNavOffset] = useState(0);
   const [heroNavMaxOffset, setHeroNavMaxOffset] = useState(0);
   const { user } = useAuth();
+  const heroNavTree = useMemo<LocalHeroNavTreeItem[]>(
+    () => getMenuItemsForRole(user?.role?.type ?? null).map(mapMenuItem),
+    [user?.role?.type],
+  );
 
   useEffect(() => {
     const fetchSlides = async () => {

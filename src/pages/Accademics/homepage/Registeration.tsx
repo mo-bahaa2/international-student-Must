@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { LinkResourceCard } from '../../../components/LinkResourceCard';
+import { PdfResourceCard } from '../../../components/PdfResourceCard';
 import { PlaygroundVideo } from '../../../components/PlaygroundVideo';
 import { getStudentResourcesByCategory, type StudentResourceItem } from '../../../services/cmsApi';
 
@@ -25,6 +27,9 @@ export default function Registeration() {
     void fetchRegistrationGuides();
   }, []);
 
+  const videoResources = resources.filter((resource) => resource.resourceType === 'video');
+  const fileOrLinkResources = resources.filter((resource) => resource.resourceType !== 'video');
+
   return (
     <div className="min-h-screen bg-white py-24 pt-32 dark:bg-[#070d19]">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8">
@@ -37,19 +42,47 @@ export default function Registeration() {
             {status}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {resources.map((resource) => (
-              <PlaygroundVideo
-                key={resource.id}
-                src={resource.resourceUrl}
-                externalUrl={resource.resourceUrl}
-                title={resource.title}
-                description={resource.description || 'Click play to open this registration guide video.'}
-                durationText={resource.duration}
-                poster={resource.thumbnailUrl}
-              />
-            ))}
-          </div>
+          <>
+            {videoResources.length > 0 && (
+              <div className="mb-8 grid grid-cols-1 gap-6">
+                {videoResources.map((resource) => (
+                  <PlaygroundVideo
+                    key={resource.id}
+                    src={resource.resourceUrl}
+                    externalUrl={resource.resourceUrl}
+                    title={resource.title}
+                    description={resource.description || 'Click play to open this registration guide video.'}
+                    durationText={resource.duration}
+                    poster={resource.thumbnailUrl}
+                  />
+                ))}
+              </div>
+            )}
+
+            {fileOrLinkResources.length > 0 && (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {fileOrLinkResources.map((resource) => {
+                  if (resource.resourceType === 'link') {
+                    return (
+                      <LinkResourceCard
+                        key={resource.id}
+                        title={resource.title}
+                        href={resource.resourceUrl}
+                      />
+                    );
+                  }
+
+                  return (
+                    <PdfResourceCard
+                      key={resource.id}
+                      title={resource.title}
+                      url={resource.resourceUrl}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

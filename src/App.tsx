@@ -22,6 +22,7 @@ import HonorList from './pages/Accademics/homepage/HonorList';
 import Questionnaires from './pages/Questionnaires';
 import { Resources } from './pages/Resources';
 import { Facilities } from './pages/Facilities';
+import { ImportantLinks } from './pages/ImportantLinks';
 import { Announcements } from './pages/Announcements';
 import { Notifications } from './pages/Notifications';
 import { ContactUs } from './pages/ContactUs';
@@ -37,6 +38,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import ActivitiesPage from './pages/Activities';
 import AdvisingPage from './pages/Advising';
+import { AdvisingAnnouncements } from './pages/AdvisingAnnouncements';
 
 // Custom Collection Pages
 import News from './pages/News'; 
@@ -100,6 +102,8 @@ function AppContent() {
               <Route path="/e-learning" element={<ELearning />} />
               <Route path="/honor-list" element={<HonorList />} />
               <Route path="/advising" element={<AdvisingPage />} />
+              <Route path="/advising/resources" element={<AdvisingPage />} />
+              <Route path="/advising/announcements" element={<AdvisingAnnouncements />} />
               <Route path="/activities" element={<ActivitiesPage />} />
               <Route path="/cultural" element={<ActivitiesPage />} />
               <Route path="/sports" element={<ActivitiesPage />} />
@@ -112,6 +116,7 @@ function AppContent() {
               <Route path="/questionnaires" element={<Questionnaires />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/facilities" element={<Facilities />} />
+              <Route path="/important-links" element={<ImportantLinks />} />
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/contactus" element={<ContactUs />} />
