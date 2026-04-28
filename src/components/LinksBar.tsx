@@ -93,11 +93,17 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
       { label: 'International Handbook', to: '/international-handbook' },
     ],
   },
+  {
+    label: 'Contact Center',
+    to: '/contact-center',
+    children: [
+      { label: 'Sector Channel', to: '/contact-center?group=leadership' },
+      { label: 'Feedback Channel', to: '/contact-center?group=feedback' },
+    ],
+  },
   { label: 'News', to: '/news' },
   { label: 'Events', to: '/events' },
   { label: 'Important Links', to: '/important-links' },
-  { label: 'Contact Us', to: '/contact-us' },
-  
 ];
 
 export function getMenuItemsForRole(userRole?: string | null): MenuItem[] {
@@ -106,17 +112,19 @@ export function getMenuItemsForRole(userRole?: string | null): MenuItem[] {
     return STATIC_MENU_ITEMS;
   }
 
-  return STATIC_MENU_ITEMS.flatMap((item) => {
-    if (item.label === 'Advising') {
-      return [];
-    }
+  const menuItemsWithoutStandaloneAdvising = STATIC_MENU_ITEMS.filter((item) => item.label !== 'Advising');
+  const contactCenterIndex = menuItemsWithoutStandaloneAdvising.findIndex((item) => item.label === 'Contact Center');
 
-    if (item.label === 'Contact Us') {
-      return [ADVISOR_MENU_ITEM];
-    }
+  if (contactCenterIndex === -1) {
+    return [...menuItemsWithoutStandaloneAdvising, ADVISOR_MENU_ITEM];
+  }
 
-    return [item];
-  });
+  return [
+    ...menuItemsWithoutStandaloneAdvising.slice(0, contactCenterIndex),
+    ADVISOR_MENU_ITEM,
+    menuItemsWithoutStandaloneAdvising[contactCenterIndex],
+    ...menuItemsWithoutStandaloneAdvising.slice(contactCenterIndex + 1),
+  ];
 }
 
 function DropdownNode({ item, closeMenu }: { item: MenuItem; closeMenu: () => void }) {
