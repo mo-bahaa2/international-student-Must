@@ -53,13 +53,6 @@ const sectionKeyAliases: Record<SectionKey, string[]> = {
   'sector-plan': ['sector-plan', 'sector plan', 'sector_plan'],
 };
 
-const SECTION_DISPLAY_NAMES: Record<string, string> = {
-  'about-sector': 'About the Sector',
-  'mission': 'Mission',
-  'vision': 'Vision',
-  'sector-plan': 'Sector Plan',
-};
-
 export default function HomePage() {
   const [openPanels, setOpenPanels] = useState<{ mission: boolean; vision: boolean }>({
     mission: true,
@@ -378,42 +371,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {textSections.length > 0 && (
-          <section className="mt-10 space-y-6">
-            {textSections.map((section) => (
-              <article key={section.sectionKey} className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm dark:border-slate-700 dark:bg-[#08132e]">
-                <div className={`flex flex-col ${section.imageUrl ? 'md:flex-row' : ''}`}>
-                  {section.imageUrl && (
-                    <div className="md:w-80 shrink-0 h-48 md:h-auto overflow-hidden">
-                      <img src={section.imageUrl} alt={SECTION_DISPLAY_NAMES[section.sectionKey] || section.sectionKey} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      {SECTION_DISPLAY_NAMES[section.sectionKey] || section.sectionKey}
-                    </h2>
-                    {section.contentText && (
-                      <p className="mt-3 leading-7 text-slate-600 dark:text-slate-300">{section.contentText}</p>
-                    )}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </section>
-        )}
-
-        {sectorPlan && (
-          <section className="mt-6">
-            <a
-              href={sectorPlan.fileUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white hover:bg-emerald-700 transition-colors"
-            >
-              {sectorPlan.title || 'Download Sector Plan'} →
-            </a>
-          </section>
-        )}
       </div>
     </div>
   );
