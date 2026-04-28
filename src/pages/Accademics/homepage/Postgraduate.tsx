@@ -12,6 +12,15 @@ export default function Postgraduate() {
       try {
         const attrs = await getStudyPlansRow();
 
+        const makeEntry = (field: unknown, id: string, title: string) =>
+          field ? [{ id, title, url: getFileUrl(field) }] : [];
+
+        const diplomaLinks = [
+          ...getManyFileLinks(attrs.diploma_big_data, 'diploma-bigdata').map((r) => ({ ...r, title: r.title || 'Diploma – Big Data' })),
+          ...getManyFileLinks(attrs.diploma_applied_ai, 'diploma-ai').map((r) => ({ ...r, title: r.title || 'Diploma – Applied AI' })),
+          ...getManyFileLinks(attrs.diploma_business_intelligence, 'diploma-bi').map((r) => ({ ...r, title: r.title || 'Diploma – Business Intelligence' })),
+        ];
+
         setConfig({
           mode: 'degree-tracks',
           title: 'Study Plans',
@@ -19,20 +28,36 @@ export default function Postgraduate() {
             msc: {
               type: 'research', label: 'M. SC',
               resourcesBySpecialty: {
-                CS: attrs.postgrad_cs ? [{ id: 'pg-msc-cs', title: 'MSc Computer Science', url: getFileUrl(attrs.postgrad_cs) }] : [],
-                IS: attrs.postgrad_ai ? [{ id: 'pg-msc-is', title: 'MSc Artificial Intelligence', url: getFileUrl(attrs.postgrad_ai) }] : [],
+                CS: [
+                  ...makeEntry(attrs.master_cs_old_curriculum, 'pg-msc-cs-old', 'MSc CS – Old Curriculum'),
+                  ...makeEntry(attrs.master_cs_new_curriculum, 'pg-msc-cs-new', 'MSc CS – New Curriculum'),
+                ],
+                IS: [
+                  ...makeEntry(attrs.master_is_old_curriculum, 'pg-msc-is-old', 'MSc IS – Old Curriculum'),
+                  ...makeEntry(attrs.master_is_new_curriculum, 'pg-msc-is-new', 'MSc IS – New Curriculum'),
+                  ...makeEntry(attrs.master_ai_old_curriculum, 'pg-msc-ai-old', 'MSc AI – Old Curriculum'),
+                  ...makeEntry(attrs.master_ai_new_curriculum, 'pg-msc-ai-new', 'MSc AI – New Curriculum'),
+                ],
               },
             },
             phd: {
               type: 'research', label: 'PH.D',
               resourcesBySpecialty: {
-                CS: attrs.postgrad_cs ? [{ id: 'pg-phd-cs', title: 'PhD Computer Science', url: getFileUrl(attrs.postgrad_cs) }] : [],
-                IS: attrs.postgrad_ai ? [{ id: 'pg-phd-is', title: 'PhD Artificial Intelligence', url: getFileUrl(attrs.postgrad_ai) }] : [],
+                CS: [
+                  ...makeEntry(attrs.phd_cs_old_curriculum, 'pg-phd-cs-old', 'PhD CS – Old Curriculum'),
+                  ...makeEntry(attrs.phd_cs_new_curriculum, 'pg-phd-cs-new', 'PhD CS – New Curriculum'),
+                ],
+                IS: [
+                  ...makeEntry(attrs.phd_is_old_curriculum, 'pg-phd-is-old', 'PhD IS – Old Curriculum'),
+                  ...makeEntry(attrs.phd_is_new_curriculum, 'pg-phd-is-new', 'PhD IS – New Curriculum'),
+                  ...makeEntry(attrs.phd_ai_old_curriculum, 'pg-phd-ai-old', 'PhD AI – Old Curriculum'),
+                  ...makeEntry(attrs.phd_ai_new_curriculum, 'pg-phd-ai-new', 'PhD AI – New Curriculum'),
+                ],
               },
             },
             professional: {
               type: 'professional', label: 'Professional Degrees',
-              resources: getManyFileLinks(attrs.professional_diplomas, 'prof'),
+              resources: diplomaLinks,
             },
           },
         });

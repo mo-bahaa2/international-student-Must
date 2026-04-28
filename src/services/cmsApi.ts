@@ -36,6 +36,16 @@ const TABLES = {
   facilities: getTable('VITE_SUPABASE_FACILITIES_TABLE', 'facilities'),
   // Intentionally no default to avoid 404s when this table is not provisioned yet.
   heroMenus: getTable('VITE_SUPABASE_HERO_MENU_TABLE', ''),
+  importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_TABLE', 'important_links'),
+  academicAdvising: getTable('VITE_SUPABASE_ACADEMIC_ADVISING_TABLE', 'academic_advising'),
+  homeSections: getTable('VITE_SUPABASE_HOME_SECTIONS_TABLE', 'home_sections'),
+  internationalHandbook: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_TABLE', 'international_handbook_documents'),
+  smartElearning: getTable('VITE_SUPABASE_SMART_ELEARNING_TABLE', 'smart_elearning_videos'),
+  contactInfo: getTable('VITE_SUPABASE_CONTACT_INFO_TABLE', 'contact_information'),
+  admissionSections: getTable('VITE_SUPABASE_ADMISSION_SECTIONS_TABLE', 'admission_sections'),
+  registrationVideos: getTable('VITE_SUPABASE_REGISTRATION_VIDEOS_TABLE', 'registration_videos'),
+  facilitiesSections: getTable('VITE_SUPABASE_FACILITIES_SECTIONS_TABLE', 'facilities_sections'),
+  contactSubmissions: getTable('VITE_SUPABASE_CONTACT_SUBMISSIONS_TABLE', 'contact_submissions'),
 } as const;
 
 const STORAGE_BUCKETS = {
@@ -51,10 +61,12 @@ const STORAGE_BUCKETS = {
   calendars: getTable('VITE_SUPABASE_CALENDAR_FILES_BUCKET', 'calendar-files'),
   gallery: getTable('VITE_SUPABASE_GALLERY_BUCKET', 'gallery'),
   avatars: getTable('VITE_SUPABASE_AVATARS_BUCKET', 'avatars'),
+  importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_IMAGES_BUCKET', 'important-links-images'),
+  facilitiesImages: getTable('VITE_SUPABASE_FACILITIES_IMAGES_BUCKET', 'facilities-images'),
+  internationalHandbookFiles: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_FILES_BUCKET', 'international-handbook-files'),
+  admissionFiles: getTable('VITE_SUPABASE_ADMISSION_FILES_BUCKET', 'admission-files'),
   homeImages: getTable('VITE_SUPABASE_HOME_IMAGES_BUCKET', 'home-images'),
   homeFiles: getTable('VITE_SUPABASE_HOME_FILES_BUCKET', 'home-files'),
-  facilitiesImages: getTable('VITE_SUPABASE_FACILITIES_IMAGES_BUCKET', 'facilities-images'),
-  internationalHandbookFiles: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_BUCKET', 'international-handbook-files'),
 } as const;
 
 export type EventCardItem = {
@@ -76,6 +88,79 @@ export type NewsCardItem = {
   href: string;
   imageUrl: string;
   imageUrls: string[];
+};
+
+export type ImportantLinkItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  imageUrl: string;
+};
+
+export type AcademicAdvisingDocument = {
+  id: string;
+  title: string;
+  fileUrl: string;
+};
+
+export type HomeSectionItem = {
+  sectionKey: string;
+  title: string | null;
+  contentText: string | null;
+  imageUrl: string | null;
+  fileUrl: string | null;
+};
+
+export type InternationalHandbookDocument = {
+  key: string;
+  title: string;
+  fileUrl: string;
+};
+
+export type SmartElearningVideo = {
+  id: string;
+  title: string;
+  sourceType: 'youtube' | 'upload';
+  youtubeUrl: string | null;
+  videoUrl: string | null;
+};
+
+export type ContactInfo = {
+  email: string;
+  phone: string;
+  address: string;
+  mapLink: string | null;
+};
+
+export type AdmissionAttachment = {
+  id: string;
+  title: string;
+  fileUrl: string;
+  fileType: string;
+};
+
+export type AdmissionSection = {
+  sectionKey: string;
+  steps: string[];
+  attachments: AdmissionAttachment[];
+};
+
+export type RegistrationVideo = {
+  id: string;
+  title: string;
+  sourceType: 'youtube' | 'upload';
+  youtubeUrl: string | null;
+  videoUrl: string | null;
+};
+
+export type FacilitySection = {
+  id: string;
+  sectionType: string;
+  title: string;
+  contentHtml: string;
+  thumbnailUrl: string | null;
+  galleryUrls: string[];
 };
 
 export type ActivityType = 'sport' | 'cultural' | 'art' | 'student club';
@@ -852,6 +937,247 @@ export async function getNewsList(): Promise<NewsCardItem[]> {
       imageUrls: fallbackUrls,
     };
   });
+}
+
+function isTableMissingError(error: { code?: string; message?: string }): boolean {
+  return (
+    error.code === 'PGRST205' ||
+    error.code === '42P01' ||
+    /important_links/i.test(error.message ?? '')
+  );
+}
+
+export function resolveImportantLinkImageUrl(imagePath: string | null): string {
+  if (!imagePath) return '';
+  const { data } = supabase.storage
+    .from(STORAGE_BUCKETS.importantLinks)
+    .getPublicUrl(imagePath);
+  return data?.publicUrl ?? '';
+}
+
+export async function getImportantLinks(): Promise<ImportantLinkItem[]> {
+  const { data, error } = await supabase
+    .from(TABLES.importantLinks)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (isTableMissingError(error)) return [];
+    throw new Error(`Failed to load important links: ${error.message}`);
+  }
+
+  return (data ?? []).map((record) => ({
+    id: record.id as string,
+    title: (record.title as string) || 'Untitled',
+    description: (record.description as string) || '',
+    href: (record.href as string) || '#',
+    imageUrl: resolveImportantLinkImageUrl((record.image_path as string | null) ?? null),
+  }));
+}
+
+function storagePubUrl(bucket: string, path: string): string {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path.replace(/^\/+/, ''));
+  return data?.publicUrl || '';
+}
+
+export async function getAcademicAdvisingDocuments(): Promise<AcademicAdvisingDocument[]> {
+  const { data, error } = await supabase
+    .from(TABLES.academicAdvising)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const filePath = pickString(row.file_path, row.filePath);
+    return {
+      id: toId(row.id),
+      title: pickString(row.title) || 'Academic Advising Document',
+      fileUrl: filePath ? storagePubUrl(STORAGE_BUCKETS.resources, filePath) : '#',
+    };
+  }).filter((d) => d.fileUrl !== '#');
+}
+
+export async function getHomeSections(): Promise<HomeSectionItem[]> {
+  const { data, error } = await supabase
+    .from(TABLES.homeSections)
+    .select('*');
+
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const imagePath = pickString(row.image_path, row.imagePath);
+    const filePath = pickString(row.file_path, row.filePath);
+    return {
+      sectionKey: pickString(row.section_key, row.sectionKey) || '',
+      title: pickString(row.title) || null,
+      contentText: pickString(row.content_text, row.contentText) || null,
+      imageUrl: imagePath ? storagePubUrl(STORAGE_BUCKETS.homeImages, imagePath) : null,
+      fileUrl: filePath ? storagePubUrl(STORAGE_BUCKETS.homeFiles, filePath) : null,
+    };
+  });
+}
+
+export async function getInternationalHandbook(): Promise<InternationalHandbookDocument | null> {
+  const { data, error } = await supabase
+    .from(TABLES.internationalHandbook)
+    .select('*')
+    .eq('key', 'current')
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const row = unwrapRow(data) as Record<string, unknown>;
+  const filePath = pickString(row.file_path, row.filePath);
+  return {
+    key: pickString(row.key) || 'current',
+    title: pickString(row.title) || 'International Student Handbook',
+    fileUrl: filePath ? storagePubUrl(STORAGE_BUCKETS.internationalHandbookFiles, filePath) : '#',
+  };
+}
+
+export async function getSmartElearningVideos(): Promise<SmartElearningVideo[]> {
+  const { data, error } = await supabase
+    .from(TABLES.smartElearning)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const sourceType = pickString(row.source_type, row.sourceType) === 'youtube' ? 'youtube' : 'upload';
+    const videoPath = pickString(row.video_path, row.videoPath);
+    return {
+      id: toId(row.id),
+      title: pickString(row.title) || 'E-Learning Video',
+      sourceType,
+      youtubeUrl: pickString(row.youtube_url, row.youtubeUrl) || null,
+      videoUrl: videoPath ? storagePubUrl(STORAGE_BUCKETS.resources, videoPath) : null,
+    };
+  });
+}
+
+export async function getContactInfo(): Promise<ContactInfo | null> {
+  const { data, error } = await supabase
+    .from(TABLES.contactInfo)
+    .select('*')
+    .eq('key', 'primary')
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const row = unwrapRow(data) as Record<string, unknown>;
+  return {
+    email: pickString(row.email) || '',
+    phone: pickString(row.phone) || '',
+    address: pickString(row.address) || '',
+    mapLink: pickString(row.map_link, row.mapLink) || null,
+  };
+}
+
+export async function getAdmissionSections(): Promise<AdmissionSection[]> {
+  const { data, error } = await supabase
+    .from(TABLES.admissionSections)
+    .select('*');
+
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const steps = Array.isArray(row.steps) ? (row.steps as unknown[]).filter((s) => typeof s === 'string') as string[] : [];
+    const rawAttachments = Array.isArray(row.attachments) ? row.attachments as Record<string, unknown>[] : [];
+    const attachments: AdmissionAttachment[] = rawAttachments.map((att, i) => {
+      const fp = pickString(att.file_path, att.filePath) || '';
+      return {
+        id: pickString(att.id) || `att-${i}`,
+        title: pickString(att.title) || `Attachment ${i + 1}`,
+        fileUrl: fp ? storagePubUrl(STORAGE_BUCKETS.admissionFiles, fp) : '#',
+        fileType: pickString(att.file_type, att.fileType) || 'pdf',
+      };
+    });
+    return {
+      sectionKey: pickString(row.section_key, row.sectionKey) || '',
+      steps,
+      attachments,
+    };
+  });
+}
+
+export async function getRegistrationVideos(): Promise<RegistrationVideo[]> {
+  const { data, error } = await supabase
+    .from(TABLES.registrationVideos)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const sourceType = pickString(row.source_type, row.sourceType) === 'youtube' ? 'youtube' : 'upload';
+    const videoPath = pickString(row.video_path, row.videoPath);
+    return {
+      id: toId(row.id),
+      title: pickString(row.title) || 'Registration Video',
+      sourceType,
+      youtubeUrl: pickString(row.youtube_url, row.youtubeUrl) || null,
+      videoUrl: videoPath ? storagePubUrl(STORAGE_BUCKETS.resources, videoPath) : null,
+    };
+  });
+}
+
+export async function getFacilitySections(): Promise<FacilitySection[]> {
+  const { data, error } = await supabase
+    .from(TABLES.facilitiesSections)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const thumbnailPath = pickString(row.thumbnail_path, row.thumbnailPath);
+    const galleryRaw = Array.isArray(row.gallery_paths) ? row.gallery_paths as unknown[] : [];
+    const galleryUrls = galleryRaw
+      .filter((p) => typeof p === 'string' && p)
+      .map((p) => storagePubUrl(STORAGE_BUCKETS.facilitiesImages, p as string));
+    return {
+      id: toId(row.id),
+      sectionType: pickString(row.section_type, row.sectionType) || '',
+      title: pickString(row.title) || '',
+      contentHtml: pickString(row.content_html, row.contentHtml) || '',
+      thumbnailUrl: thumbnailPath ? storagePubUrl(STORAGE_BUCKETS.facilitiesImages, thumbnailPath) : null,
+      galleryUrls,
+    };
+  });
+}
+
+export async function submitContactForm(payload: {
+  firstName: string;
+  lastName: string;
+  subject: string;
+  message: string;
+}): Promise<void> {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from(TABLES.contactSubmissions)
+    .insert({
+      first_name: payload.firstName,
+      last_name: payload.lastName,
+      subject: payload.subject,
+      message: payload.message,
+      status: 'new',
+      created_at: now,
+      updated_at: now,
+    });
+
+  if (error) throw new Error(error.message);
 }
 
 export async function getActivitiesList(activityType?: ActivityType): Promise<NewsCardItem[]> {
