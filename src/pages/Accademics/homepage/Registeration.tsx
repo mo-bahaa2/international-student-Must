@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { LinkResourceCard } from '../../../components/LinkResourceCard';
+import { PdfResourceCard } from '../../../components/PdfResourceCard';
 import { PlaygroundVideo } from '../../../components/PlaygroundVideo';
 import { getRegistrationVideos, getStudentResourcesByCategory, type RegistrationVideo, type StudentResourceItem } from '../../../services/cmsApi';
 
@@ -52,6 +54,9 @@ export default function Registeration() {
 
     void fetchVideos();
   }, []);
+
+  const videoResources = resources.filter((resource) => resource.resourceType === 'video');
+  const fileOrLinkResources = resources.filter((resource) => resource.resourceType !== 'video');
 
   return (
     <div className="min-h-screen bg-white py-24 pt-32 dark:bg-[#070d19]">

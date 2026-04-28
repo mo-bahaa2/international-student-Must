@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { ROLES } from '../constants/roles';
 
 interface LinksBarProps {
   className?: string;
@@ -9,6 +11,25 @@ export type MenuItem = {
   label: string;
   to: string;
   children?: MenuItem[];
+};
+
+const ADVISOR_RESOURCES_SUBMENU: MenuItem[] = [
+  { label: 'Academic Advising', to: '/academic-advising' },
+  { label: 'Registeration', to: '/Registeration' },
+  { label: 'Schedules', to: '/schedules' },
+];
+
+const ADVISOR_MENU_ITEM: MenuItem = {
+  label: 'Advising',
+  to: '/advising/announcements',
+  children: [
+    { label: 'Announcements', to: '/advising/announcements' },
+    {
+      label: 'Advising Resources',
+      to: '/advising/resources',
+      children: ADVISOR_RESOURCES_SUBMENU,
+    },
+  ],
 };
 
 export const STATIC_MENU_ITEMS: MenuItem[] = [
@@ -76,7 +97,27 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
   { label: 'Events', to: '/events' },
   { label: 'Important Links', to: '/important-links' },
   { label: 'Contact Us', to: '/contact-us' },
+  
 ];
+
+export function getMenuItemsForRole(userRole?: string | null): MenuItem[] {
+  const isAdvisor = userRole === ROLES.ADMIN;
+  if (!isAdvisor) {
+    return STATIC_MENU_ITEMS;
+  }
+
+  return STATIC_MENU_ITEMS.flatMap((item) => {
+    if (item.label === 'Advising') {
+      return [];
+    }
+
+    if (item.label === 'Contact Us') {
+      return [ADVISOR_MENU_ITEM];
+    }
+
+    return [item];
+  });
+}
 
 function DropdownNode({ item, closeMenu }: { item: MenuItem; closeMenu: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -126,10 +167,12 @@ function DropdownNode({ item, closeMenu }: { item: MenuItem; closeMenu: () => vo
 
 export function LinksBar({ className = '' }: LinksBarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const { user } = useAuth();
+  const menuItems = useMemo(() => getMenuItemsForRole(user?.role?.type ?? null), [user?.role?.type]);
 
   return (
     <div className={`flex items-center gap-6 ${className}`} onMouseLeave={() => setOpenMenu(null)}>
-      {STATIC_MENU_ITEMS.map((item) => {
+      {menuItems.map((item) => {
         const hasDropdown = !!item.children?.length;
         const isOpen = openMenu === item.label;
 
