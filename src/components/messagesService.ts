@@ -1,9 +1,13 @@
-import {
-  supabase,
-  supabaseAdvisorStudentConversationsTable,
-  supabaseConversationMessagesTable,
-  supabaseStudentsTable
-} from '../lib/supabase';
+import { supabase } from '../services/supabase';
+
+const getEnvTable = (envName: string, fallback: string) => {
+  const value = import.meta.env[envName];
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+};
+
+const supabaseAdvisorStudentConversationsTable = getEnvTable('VITE_SUPABASE_CONVERSATIONS_TABLE', 'advisor_student_conversations');
+const supabaseConversationMessagesTable = getEnvTable('VITE_SUPABASE_MESSAGES_TABLE', 'conversation_messages');
+const supabaseStudentsTable = getEnvTable('VITE_SUPABASE_STUDENTS_TABLE', 'students');
 
 export type ConversationStatus = 'open' | 'closed';
 

@@ -42,6 +42,7 @@ import AdvisingPage from './pages/Advising';
 import News from './pages/News';
 import Events from './pages/Events';
 import ImportantLinks from './pages/ImportantLinks';
+import HandbookPage from './pages/Handbook';
 
 import { ProfileProvider } from './contexts/ProfileContext';
 import { RequestsProvider } from './contexts/RequestsContext';
@@ -109,6 +110,7 @@ function AppContent() {
               <Route path="/news" element={<News />} />
               <Route path="/events" element={<Events />} />
               <Route path="/important-links" element={<ImportantLinks />} />
+              <Route path="/handbook" element={<HandbookPage />} />
               {/* ------------------------------------- */}
 
               <Route path="/questionnaires" element={<Questionnaires />} />

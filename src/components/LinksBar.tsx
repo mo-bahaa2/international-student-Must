@@ -27,6 +27,7 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
       { label: 'Calendar', to: '/calendar' },
       { label: 'E-Learning', to: '/e-learning' },
       { label: 'How To Apply', to: '/how-to-apply' },
+      { label: 'Student Handbook', to: '/handbook' },
     ],
   },
   { label: 'Advising', to: '/advising' },
