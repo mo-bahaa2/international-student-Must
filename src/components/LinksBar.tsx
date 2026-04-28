@@ -35,8 +35,16 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
       { label: 'Schedules', to: '/schedules' },
       { label: 'Calendar', to: '/calendar' },
       { label: 'E-Learning', to: '/e-learning' },
-      { label: 'How To Apply', to: '/how-to-apply' },
-      { label: 'Student Handbook', to: '/handbook' },
+      {
+        label: 'Admission',
+        to: '/how-to-apply',
+        children: [
+          { label: 'Required Documents', to: '/how-to-apply#required-documents' },
+          { label: 'How to Apply', to: '/how-to-apply#how-to-apply' },
+          { label: 'External Transfer Requirements', to: '/how-to-apply#external-transfer-requirements' },
+        ],
+      },
+      // { label: 'Student Handbook', to: '/handbook' },
     ],
   },
   { label: 'Advising', to: '/advising' },
@@ -75,16 +83,12 @@ function DropdownNode({ item, closeMenu }: { item: MenuItem; closeMenu: () => vo
   const hasChildren = !!item.children?.length;
 
   return (
-    <div className="relative">
-      <div
-        className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold text-white cursor-pointer transition-colors hover:bg-white/10 hover:text-green-400"
-        onClick={(e) => {
-          if (hasChildren) {
-            e.preventDefault();
-            setIsOpen(!isOpen);
-          }
-        }}
-      >
+    <div
+      className="relative"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <div className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold text-white cursor-pointer transition-colors hover:bg-white/10 hover:text-green-400">
         <Link
           to={item.to}
           className="flex-1 no-underline text-inherit"

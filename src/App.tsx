@@ -112,7 +112,7 @@ function AppContent() {
               <Route path="/news" element={<News />} />
               <Route path="/events" element={<Events />} />
               <Route path="/important-links" element={<ImportantLinks />} />
-              <Route path="/handbook" element={<HandbookPage />} />
+              {/* <Route path="/handbook" element={<HandbookPage />} /> */}
               {/* ------------------------------------- */}
 
               <Route path="/questionnaires" element={<Questionnaires />} />

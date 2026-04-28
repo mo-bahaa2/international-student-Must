@@ -153,7 +153,7 @@ export function HeroSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [slides, setSlides] = useState<SliderImage[]>([]);
-  const [heroNavTree] = useState<LocalHeroNavTreeItem[]>(STATIC_HERO_NAV_TREE);
+  const heroNavTree = STATIC_HERO_NAV_TREE;
   const [activeHeroNavPath, setActiveHeroNavPath] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
