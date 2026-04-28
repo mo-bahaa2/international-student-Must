@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import { LinkResourceCard } from '../../../components/LinkResourceCard';
-import { PdfResourceCard } from '../../../components/PdfResourceCard';
 import { PlaygroundVideo } from '../../../components/PlaygroundVideo';
 import { getRegistrationVideos, getStudentResourcesByCategory, type RegistrationVideo, type StudentResourceItem } from '../../../services/cmsApi';
 
@@ -24,9 +22,16 @@ export default function Registeration() {
 
         if (dedicated.length > 0) {
           setVideos(dedicated.map((v: RegistrationVideo) => {
-            const isYoutube = v.sourceType === 'youtube' && v.youtubeUrl;
-            const src = isYoutube ? v.youtubeUrl! : (v.videoUrl || '');
-            return { id: v.id, title: v.title, src, isExternal: !!isYoutube, externalUrl: isYoutube ? v.youtubeUrl! : undefined };
+            const yt = v.youtubeUrl?.trim();
+            const isYoutube = v.sourceType === 'youtube' && Boolean(yt);
+            const src = isYoutube && yt ? yt : (v.videoUrl ?? '');
+            return {
+              id: v.id,
+              title: v.title,
+              src,
+              isExternal: isYoutube,
+              externalUrl: isYoutube && yt ? yt : undefined,
+            };
           }));
           setStatus('');
         } else {
@@ -55,9 +60,6 @@ export default function Registeration() {
     void fetchVideos();
   }, []);
 
-  const videoResources = resources.filter((resource) => resource.resourceType === 'video');
-  const fileOrLinkResources = resources.filter((resource) => resource.resourceType !== 'video');
-
   return (
     <div className="min-h-screen bg-white py-24 pt-32 dark:bg-[#070d19]">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8">
@@ -81,7 +83,11 @@ export default function Registeration() {
                 src={video.src}
                 externalUrl={video.externalUrl}
                 title={video.title}
-                description="Click play to open this registration guide video."
+                description={
+                  video.externalUrl
+                    ? 'Click anywhere on the card to open this guide in a new tab.'
+                    : 'Use the player below to watch this registration guide.'
+                }
               />
             ))}
           </div>

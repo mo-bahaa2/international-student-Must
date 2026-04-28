@@ -24,7 +24,7 @@ const TABLES = {
   academicAdvising: getTable('VITE_SUPABASE_ACADEMIC_ADVISING_TABLE', 'academic_advising'),
   advisorAnnouncements: getTable(
     'VITE_SUPABASE_ADVISOR_ANNOUNCEMENTS_TABLE',
-    getTable('VITE_SUPABASE_ANNOUNCEMENTS_TABLE', 'advisor_announcements'),
+    getTable('VITE_SUPABASE_ANNOUNCEMENTS_TABLE', 'announcements'),
   ),
   announcements: getTable('VITE_SUPABASE_ANNOUNCEMENTS_TABLE', ''),
   contactUs: getTable('VITE_SUPABASE_CONTACT_US_TABLE', ''),
@@ -42,7 +42,6 @@ const TABLES = {
   // Intentionally no default to avoid 404s when this table is not provisioned yet.
   heroMenus: getTable('VITE_SUPABASE_HERO_MENU_TABLE', ''),
   importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_TABLE', 'important_links'),
-  academicAdvising: getTable('VITE_SUPABASE_ACADEMIC_ADVISING_TABLE', 'academic_advising'),
   internationalHandbook: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_TABLE', 'international_handbook_documents'),
   smartElearning: getTable('VITE_SUPABASE_SMART_ELEARNING_TABLE', 'smart_elearning_videos'),
   contactInfo: getTable('VITE_SUPABASE_CONTACT_INFO_TABLE', 'contact_information'),
@@ -65,16 +64,21 @@ const STORAGE_BUCKETS = {
   calendars: getTable('VITE_SUPABASE_CALENDAR_FILES_BUCKET', 'calendar-files'),
   gallery: getTable('VITE_SUPABASE_GALLERY_BUCKET', 'gallery'),
   avatars: getTable('VITE_SUPABASE_AVATARS_BUCKET', 'avatars'),
-  importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_IMAGES_BUCKET', 'important-links-images'),
   facilitiesImages: getTable('VITE_SUPABASE_FACILITIES_IMAGES_BUCKET', 'facilities-images'),
   internationalHandbookFiles: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_FILES_BUCKET', 'international-handbook-files'),
   admissionFiles: getTable('VITE_SUPABASE_ADMISSION_FILES_BUCKET', 'admission-files'),
   homeImages: getTable('VITE_SUPABASE_HOME_IMAGES_BUCKET', 'home-images'),
   homeFiles: getTable('VITE_SUPABASE_HOME_FILES_BUCKET', 'home-files'),
-  /** Same bucket family as other CMS uploads unless overridden */
+  /**
+   * Important link thumbnails: dashboard uses VITE_SUPABASE_IMPORTANT_LINKS_IMAGES_BUCKET (e.g. important-links-images).
+   * Fallback: VITE_SUPABASE_IMPORTANT_LINKS_BUCKET, then shared resources-files.
+   */
   importantLinks: getTable(
-    'VITE_SUPABASE_IMPORTANT_LINKS_BUCKET',
-    getTable('VITE_SUPABASE_RESOURCES_FILES_BUCKET', 'resources-files'),
+    'VITE_SUPABASE_IMPORTANT_LINKS_IMAGES_BUCKET',
+    getTable(
+      'VITE_SUPABASE_IMPORTANT_LINKS_BUCKET',
+      getTable('VITE_SUPABASE_RESOURCES_FILES_BUCKET', 'resources-files'),
+    ),
   ),
 } as const;
 
@@ -97,14 +101,6 @@ export type NewsCardItem = {
   href: string;
   imageUrl: string;
   imageUrls: string[];
-};
-
-export type ImportantLinkItem = {
-  id: string;
-  title: string;
-  description: string;
-  href: string;
-  imageUrl: string;
 };
 
 export type AcademicAdvisingDocument = {
@@ -944,79 +940,270 @@ export async function getAdvisorResources(): Promise<AdvisorResourceItem[]> {
   }).filter((item) => item.resourceUrl && item.resourceUrl !== '#');
 }
 
+function announcementRowIsVisible(row: Record<string, unknown>): boolean {
+  if (row.is_draft === true) {
+    return false;
+  }
+  if (row.published === false) {
+    return false;
+  }
+  const status = pickString(row.status, row.visibility);
+  if (status && ['draft', 'hidden', 'private'].includes(status.toLowerCase())) {
+    return false;
+  }
+  return true;
+}
+
+function coerceAnnouncementItemsArray(value: unknown): unknown[] | null {
+  if (value == null) {
+    return null;
+  }
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  const arr = toArray(value);
+  return arr.length > 0 ? arr : null;
+}
+
+function extractNestedAnnouncementEntries(row: Record<string, unknown>): unknown[] | null {
+  const candidates = [
+    row.announcements_items,
+    row.announcementsItems,
+    row.announcement_items,
+    row.announcementItems,
+    row.items,
+  ];
+  for (const c of candidates) {
+    const arr = coerceAnnouncementItemsArray(c);
+    if (arr) {
+      return arr;
+    }
+  }
+  return null;
+}
+
+function firstUrlFromStrapiAttachments(item: Record<string, unknown>): string | undefined {
+  const attachments = item.attachments;
+  if (!attachments) {
+    return undefined;
+  }
+  const list = isObject(attachments) && Array.isArray((attachments as { data?: unknown }).data)
+    ? (attachments as { data: unknown[] }).data
+    : Array.isArray(attachments)
+      ? attachments
+      : [];
+  const first = list[0];
+  if (!isObject(first)) {
+    return undefined;
+  }
+  return pickString(
+    first.url,
+    isObject(first.attributes) ? pickString((first.attributes as Record<string, unknown>).url) : undefined,
+  );
+}
+
+function mapRowToAdvisorAnnouncement(row: Record<string, unknown>): AdvisorAnnouncementItem {
+  const photoPath = pickString(
+    row.photo_path,
+    row.photoPath,
+    row.photo_url,
+    row.photoUrl,
+    row.image_path,
+    row.imagePath,
+    row.image_url,
+    row.imageUrl,
+    row.thumbnail_path,
+    row.thumbnailPath,
+    row.thumbnail_url,
+    row.thumbnailUrl,
+  );
+  const pdfPath = pickString(
+    row.pdf_path,
+    row.pdfPath,
+    row.pdf_url,
+    row.pdfUrl,
+    row.file_path,
+    row.filePath,
+    row.file_url,
+    row.fileUrl,
+    row.resource_url,
+    row.resourceUrl,
+    row.attachment_path,
+    row.attachmentPath,
+    row.attachment_url,
+    row.attachmentUrl,
+  );
+  const galleryUrls = extractMediaUrls(
+    row.gallery_urls,
+    row.galleryUrls,
+    row.gallery_paths,
+    row.galleryPaths,
+    row.gallery,
+    row.images,
+    row.image_urls,
+    row.imageUrls,
+    row.photos,
+    row.photo_urls,
+    row.photoUrls,
+  );
+  const attachmentUrl = firstUrlFromStrapiAttachments(row);
+  const resolvedPdf =
+    pdfPath ||
+    (attachmentUrl && attachmentUrl.toLowerCase().includes('.pdf') ? attachmentUrl : undefined);
+
+  return {
+    id: toId(row.id),
+    title: pickString(row.title) || 'Announcement',
+    description: pickString(row.description, row.content, row.body, row.excerpt) || '',
+    date:
+      pickString(
+        row.announcement_date,
+        row.date,
+        row.published_at,
+        row.publish_date,
+        row.updated_at,
+        row.updatedAt,
+        row.created_at,
+        row.createdAt,
+      ) || '',
+    imageUrl: photoPath ? getCmsMediaUrl(photoPath) : galleryUrls[0],
+    pdfUrl: resolvedPdf ? getCmsMediaUrl(resolvedPdf) : undefined,
+    galleryUrls,
+  };
+}
+
+function mapNestedAnnouncementItem(parentRow: Record<string, unknown>, itemRaw: unknown, index: number): AdvisorAnnouncementItem | null {
+  const item = unwrapRow(itemRaw) as Record<string, unknown>;
+  if (!announcementRowIsVisible(item)) {
+    return null;
+  }
+
+  const parentId = toId(parentRow.id);
+  const nestedId = pickString(item.id);
+  const photoPath = pickString(
+    item.photo_path,
+    item.photoPath,
+    item.photo_url,
+    item.image_path,
+    item.image_url,
+    item.cover_image,
+    item.coverImage,
+    item.thumbnail_url,
+  );
+  const pdfPath = pickString(
+    item.pdf_path,
+    item.file_path,
+    item.file_url,
+    item.attachment_url,
+    item.link,
+    item.document_url,
+  );
+  const galleryUrls = extractMediaUrls(
+    item.gallery_urls,
+    item.gallery,
+    item.images,
+    item.image_urls,
+    item.photo_urls,
+  );
+  const attachmentUrl = firstUrlFromStrapiAttachments(item);
+  const resolvedPdf =
+    pdfPath ||
+    (attachmentUrl && attachmentUrl.toLowerCase().includes('.pdf') ? attachmentUrl : undefined);
+
+  return {
+    id: nestedId ? `${parentId}-${nestedId}` : `${parentId}-item-${index}`,
+    title:
+      pickString(item.title, item.heading, item.name) ||
+      pickString(parentRow.title) ||
+      'Announcement',
+    description:
+      pickString(item.content, item.description, item.excerpt, item.body, item.summary, item.text) || '',
+    date:
+      pickString(
+        item.date,
+        item.announcement_date,
+        item.published_at,
+        item.publish_date,
+        item.created_at,
+        parentRow.updated_at,
+        parentRow.updatedAt,
+        parentRow.created_at,
+        parentRow.createdAt,
+      ) || '',
+    imageUrl: photoPath ? getCmsMediaUrl(photoPath) : galleryUrls[0],
+    pdfUrl: resolvedPdf ? getCmsMediaUrl(resolvedPdf) : undefined,
+    galleryUrls,
+  };
+}
+
+function expandAnnouncementRows(rawRows: unknown[]): AdvisorAnnouncementItem[] {
+  const out: AdvisorAnnouncementItem[] = [];
+
+  for (const raw of rawRows) {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    if (!announcementRowIsVisible(row)) {
+      continue;
+    }
+
+    const nested = extractNestedAnnouncementEntries(row);
+    if (nested && nested.length > 0) {
+      nested.forEach((entry, idx) => {
+        const mapped = mapNestedAnnouncementItem(row, entry, idx);
+        if (mapped) {
+          out.push(mapped);
+        }
+      });
+    } else {
+      out.push(mapRowToAdvisorAnnouncement(row));
+    }
+  }
+
+  return out;
+}
+
+async function fetchAnnouncementTableRows(table: string): Promise<unknown[]> {
+  const attempts = [
+    () => supabase.from(table).select('*').order('created_at', { ascending: false }),
+    () => supabase.from(table).select('*').order('updated_at', { ascending: false }),
+    () => supabase.from(table).select('*').order('id', { ascending: false }),
+    () => supabase.from(table).select('*'),
+  ];
+
+  let lastError: unknown;
+
+  for (const run of attempts) {
+    const { data, error } = await run();
+    if (!error) {
+      return data || [];
+    }
+    lastError = error;
+    if (isMissingTableError(error)) {
+      return [];
+    }
+  }
+
+  const message =
+    isObject(lastError) && typeof lastError.message === 'string'
+      ? lastError.message
+      : 'Could not load announcements.';
+  throw new Error(message);
+}
+
 export async function getAdvisorAnnouncementsList(): Promise<AdvisorAnnouncementItem[]> {
   if (!TABLES.advisorAnnouncements) {
     return [];
   }
 
-  const { data, error } = await supabase
-    .from(TABLES.advisorAnnouncements)
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    if (isMissingTableError(error)) {
-      return [];
-    }
-    throw new Error(error.message);
-  }
-
-  return (data || []).map((raw) => {
-    const row = unwrapRow(raw) as Record<string, unknown>;
-    const photoPath = pickString(
-      row.photo_path,
-      row.photoPath,
-      row.photo_url,
-      row.photoUrl,
-      row.image_path,
-      row.imagePath,
-      row.image_url,
-      row.imageUrl,
-      row.thumbnail_path,
-      row.thumbnailPath,
-      row.thumbnail_url,
-      row.thumbnailUrl,
-    );
-    const pdfPath = pickString(
-      row.pdf_path,
-      row.pdfPath,
-      row.pdf_url,
-      row.pdfUrl,
-      row.file_path,
-      row.filePath,
-      row.file_url,
-      row.fileUrl,
-      row.resource_url,
-      row.resourceUrl,
-      row.attachment_path,
-      row.attachmentPath,
-      row.attachment_url,
-      row.attachmentUrl,
-    );
-    const galleryUrls = extractMediaUrls(
-      row.gallery_urls,
-      row.galleryUrls,
-      row.gallery_paths,
-      row.galleryPaths,
-      row.gallery,
-      row.images,
-      row.image_urls,
-      row.imageUrls,
-      row.photos,
-      row.photo_urls,
-      row.photoUrls,
-    );
-
-    return {
-      id: toId(row.id),
-      title: pickString(row.title) || 'Announcement',
-      description: pickString(row.description, row.content, row.body, row.excerpt) || '',
-      date: pickString(row.announcement_date, row.date, row.published_at, row.publish_date, row.created_at) || '',
-      imageUrl: photoPath ? getCmsMediaUrl(photoPath) : galleryUrls[0],
-      pdfUrl: pdfPath ? getCmsMediaUrl(pdfPath) : undefined,
-      galleryUrls,
-    };
-  });
+  const rawRows = await fetchAnnouncementTableRows(TABLES.advisorAnnouncements);
+  return expandAnnouncementRows(rawRows);
 }
 
 export async function getAnnouncements(): Promise<Announcements> {
@@ -1127,40 +1314,9 @@ export async function getNewsList(): Promise<NewsCardItem[]> {
   });
 }
 
-function isTableMissingError(error: { code?: string; message?: string }): boolean {
-  return (
-    error.code === 'PGRST205' ||
-    error.code === '42P01' ||
-    /important_links/i.test(error.message ?? '')
-  );
-}
-
-export function resolveImportantLinkImageUrl(imagePath: string | null): string {
-  if (!imagePath) return '';
-  const { data } = supabase.storage
-    .from(STORAGE_BUCKETS.importantLinks)
-    .getPublicUrl(imagePath);
-  return data?.publicUrl ?? '';
-}
-
+/** Same mapping as {@link getImportantLinksList}: resolves storage paths via {@link getCmsMediaUrl}. */
 export async function getImportantLinks(): Promise<ImportantLinkItem[]> {
-  const { data, error } = await supabase
-    .from(TABLES.importantLinks)
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    if (isTableMissingError(error)) return [];
-    throw new Error(`Failed to load important links: ${error.message}`);
-  }
-
-  return (data ?? []).map((record) => ({
-    id: record.id as string,
-    title: (record.title as string) || 'Untitled',
-    description: (record.description as string) || '',
-    href: (record.href as string) || '#',
-    imageUrl: resolveImportantLinkImageUrl((record.image_path as string | null) ?? null),
-  }));
+  return getImportantLinksList();
 }
 
 function storagePubUrl(bucket: string, path: string): string {

@@ -39,7 +39,6 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import ActivitiesPage from './pages/Activities';
 import AdvisingPage from './pages/Advising';
-import { AdvisingAnnouncements } from './pages/AdvisingAnnouncements';
 
 // Custom Collection Pages
 import News from './pages/News';
@@ -106,7 +105,7 @@ function AppContent() {
               <Route path="/honor-list" element={<HonorList />} />
               <Route path="/advising" element={<AdvisingPage />} />
               <Route path="/advising/resources" element={<AdvisingPage />} />
-              <Route path="/advising/announcements" element={<AdvisingAnnouncements />} />
+              <Route path="/advising/announcements" element={<Announcements />} />
               <Route path="/activities" element={<ActivitiesPage />} />
               <Route path="/cultural" element={<ActivitiesPage />} />
               <Route path="/sports" element={<ActivitiesPage />} />

@@ -59,7 +59,12 @@ export function AdvisingAnnouncements() {
           <div className="mt-8 animate-pulse text-emerald-600 dark:text-emerald-400">Loading announcements from Supabase...</div>
         ) : status ? (
           <div className="mt-8 rounded-xl border border-dashed border-slate-300 p-8 text-center text-emerald-700 dark:border-slate-700 dark:text-emerald-400">
-            {status}
+            <p>{status}</p>
+            {status === 'No announcements available yet.' ? (
+              <p className="mx-auto mt-4 max-w-xl text-sm text-slate-600 dark:text-slate-400">
+              No announcements available yet.
+              </p>
+            ) : null}
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">

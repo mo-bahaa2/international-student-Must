@@ -72,6 +72,23 @@ export function Academics() {
     }, {} as Record<string, AcademicStaffProfileCardProps[]>);
   };
 
+  const rolePriority: Record<string, number> = {
+    Professors: 0,
+    'Assistant Professors': 1,
+    Lecturers: 2,
+    'Assistant Lecturers': 3,
+    'Teaching Assistants': 4,
+  };
+
+  const groupedEntries = Object.entries(groupByRole(staffList)).sort(([a], [b]) => {
+    const aRank = rolePriority[a] ?? Number.MAX_SAFE_INTEGER;
+    const bRank = rolePriority[b] ?? Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) {
+      return aRank - bRank;
+    }
+    return a.localeCompare(b);
+  });
+
   return (
     <div className="mx-auto min-h-screen max-w-[1400px] px-4 py-16 pt-32">
       <h1 className="mb-12 text-center text-4xl font-bold text-emerald-700 dark:text-emerald-400 sm:text-left">
@@ -88,7 +105,7 @@ export function Academics() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {Object.entries(groupByRole(staffList)).map(([roleName, members], index) => (
+          {groupedEntries.map(([roleName, members], index) => (
             <StaffAccordion
               key={roleName}
               roleName={roleName}

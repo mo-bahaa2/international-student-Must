@@ -13,6 +13,46 @@ type PlaygroundVideoProps = {
   mimeType?: string;
 };
 
+function stripLinkSuffixFromTitle(raw: string): string {
+  return raw.replace(/\s*\(\s*Link\s*\)\s*$/i, '').trim();
+}
+
+function extractYoutubeVideoId(rawUrl: string): string | null {
+  try {
+    const u = new URL(rawUrl.trim());
+    const host = u.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') {
+      const id = u.pathname.replace(/^\//, '').split('/')[0];
+      return id || null;
+    }
+    if (host.includes('youtube.com')) {
+      const v = u.searchParams.get('v');
+      if (v) {
+        return v;
+      }
+      const embed = u.pathname.match(/^\/embed\/([^/?]+)/);
+      if (embed?.[1]) {
+        return embed[1];
+      }
+      const shorts = u.pathname.match(/^\/shorts\/([^/?]+)/);
+      if (shorts?.[1]) {
+        return shorts[1];
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function youtubePosterFromUrl(url: string | undefined): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+  const id = extractYoutubeVideoId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : undefined;
+}
+
 function formatDuration(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return '—:—';
   const total = Math.round(totalSeconds);
@@ -55,11 +95,18 @@ export function PlaygroundVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [durationLabel, setDurationLabel] = useState<string | null>(null);
   const isExternal = Boolean(externalUrl);
+  const displayTitle = stripLinkSuffixFromTitle(title);
+  const resolvedPoster =
+    poster ||
+    (isExternal ? youtubePosterFromUrl(externalUrl) ?? youtubePosterFromUrl(src) : undefined);
 
   const captureDuration = useCallback(() => {
     const el = videoRef.current;
-    const d = el?.duration;
-    if (el && Number.isFinite(d) && d > 0) {
+    if (!el) {
+      return;
+    }
+    const d = el.duration;
+    if (Number.isFinite(d) && d > 0) {
       setDurationLabel(formatDuration(d));
     }
   }, []);
@@ -68,67 +115,87 @@ export function PlaygroundVideo({
     setDurationLabel(null);
   }, [src]);
 
+  const cardShellClass =
+    'mx-auto block w-full max-w-4xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg transition-opacity hover:opacity-[0.98] dark:border-slate-600 dark:bg-slate-800 dark:shadow-slate-900/50';
+
+  const mediaBlock = (
+    <div className="relative aspect-video w-full bg-black">
+      {resolvedPoster ? (
+        <img
+          src={resolvedPoster}
+          alt=""
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+        />
+      ) : (
+        <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
+      )}
+      <div className="absolute inset-0 bg-black/35 transition-colors duration-300 group-hover:bg-black/45" />
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-white">
+        <span className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/20 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
+          <PlayIcon className="h-8 w-8" />
+        </span>
+        <span className="text-sm font-semibold uppercase tracking-wider">Open video</span>
+      </div>
+    </div>
+  );
+
+  const bodyBlock = (
+    <div className="border-t border-slate-100 p-5 sm:p-6 dark:border-slate-700">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <h3 className="min-w-0 flex-1 text-lg font-bold text-slate-900 dark:text-white">{displayTitle}</h3>
+        {!isExternal ? (
+          <div
+            className="flex shrink-0 items-center gap-1.5 text-sm font-medium tabular-nums text-slate-500 dark:text-slate-400"
+            title={durationLabel ? `Duration ${durationLabel}` : 'Loading duration'}
+          >
+            <ClockIcon className="h-4 w-4 shrink-0 opacity-80" />
+            <span className={durationLabel ? '' : 'animate-pulse'}>{durationLabel ?? '…'}</span>
+          </div>
+        ) : durationText ? (
+          <div className="flex shrink-0 items-center gap-1.5 text-sm font-medium tabular-nums text-slate-500 dark:text-slate-400">
+            <ClockIcon className="h-4 w-4 shrink-0 opacity-80" />
+            <span>{durationText}</span>
+          </div>
+        ) : null}
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{description}</p>
+    </div>
+  );
+
+  if (isExternal && externalUrl) {
+    return (
+      <a
+        href={externalUrl}
+        target="_blank"
+        rel="noreferrer"
+        className={`${cardShellClass} group no-underline`}
+        aria-label={`Open video: ${displayTitle}`}
+      >
+        {mediaBlock}
+        {bodyBlock}
+      </a>
+    );
+  }
+
   return (
-    <article className="mx-auto min-w-80 min-h-36 max-w-4xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:shadow-slate-900/50">
+    <article className={cardShellClass}>
       <div className="aspect-video w-full bg-black">
-        {isExternal ? (
-          <a
-            href={externalUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="group relative block h-full w-full overflow-hidden"
-            aria-label={`Open video: ${title}`}
-          >
-            {poster ? (
-              <img src={poster} alt={title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            ) : (
-              <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
-            )}
-            <div className="absolute inset-0 bg-black/35 transition-colors duration-300 group-hover:bg-black/45" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white">
-              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/20 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
-                <PlayIcon className="h-8 w-8" />
-              </span>
-              <span className="text-sm font-semibold uppercase tracking-wider">Play Video</span>
-            </div>
-          </a>
-        ) : (
-          <video
-            ref={videoRef}
-            className="h-full w-full object-contain"
-            controls
-            playsInline
-            preload="metadata"
-            poster={poster}
-            aria-label={title}
-            onLoadedMetadata={captureDuration}
-            onDurationChange={captureDuration}
-          >
-            <source src={src} type={mimeType} />
-            Your browser does not support the video tag.
-          </video>
-        )}
+        <video
+          ref={videoRef}
+          className="h-full w-full object-contain"
+          controls
+          playsInline
+          preload="metadata"
+          poster={poster}
+          aria-label={displayTitle}
+          onLoadedMetadata={captureDuration}
+          onDurationChange={captureDuration}
+        >
+          <source src={src} type={mimeType} />
+          Your browser does not support the video tag.
+        </video>
       </div>
-      <div className="border-t border-slate-100 p-5 sm:p-6 dark:border-slate-700">
-        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-          <h3 className="min-w-0 flex-1 text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
-          {isExternal ? (
-            <div className="flex shrink-0 items-center gap-1.5 text-sm font-medium tabular-nums text-slate-500 dark:text-slate-400">
-              <ClockIcon className="h-4 w-4 shrink-0 opacity-80" />
-              <span>{durationText || 'External video link'}</span>
-            </div>
-          ) : (
-            <div
-              className="flex shrink-0 items-center gap-1.5 text-sm font-medium tabular-nums text-slate-500 dark:text-slate-400"
-              title={durationLabel ? `Duration ${durationLabel}` : 'Loading duration'}
-            >
-              <ClockIcon className="h-4 w-4 shrink-0 opacity-80" />
-              <span className={durationLabel ? '' : 'animate-pulse'}>{durationLabel ?? '…'}</span>
-            </div>
-          )}
-        </div>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{description}</p>
-      </div>
+      {bodyBlock}
     </article>
   );
 }
