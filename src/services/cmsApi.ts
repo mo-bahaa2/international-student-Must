@@ -38,7 +38,6 @@ const TABLES = {
   heroMenus: getTable('VITE_SUPABASE_HERO_MENU_TABLE', ''),
   importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_TABLE', 'important_links'),
   academicAdvising: getTable('VITE_SUPABASE_ACADEMIC_ADVISING_TABLE', 'academic_advising'),
-  homeSections: getTable('VITE_SUPABASE_HOME_SECTIONS_TABLE', 'home_sections'),
   internationalHandbook: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_TABLE', 'international_handbook_documents'),
   smartElearning: getTable('VITE_SUPABASE_SMART_ELEARNING_TABLE', 'smart_elearning_videos'),
   contactInfo: getTable('VITE_SUPABASE_CONTACT_INFO_TABLE', 'contact_information'),
