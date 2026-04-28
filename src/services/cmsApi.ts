@@ -21,6 +21,11 @@ const TABLES = {
   questionnaires: getTable('VITE_SUPABASE_QUESTIONNAIRES_TABLE', ''),
   resources: getTable('VITE_SUPABASE_STUDENT_RESOURCES_TABLE', 'student_resources'),
   advisorResources: getTable('VITE_SUPABASE_ADVISOR_RESOURCES_TABLE', 'advisor_resources'),
+  academicAdvising: getTable('VITE_SUPABASE_ACADEMIC_ADVISING_TABLE', 'academic_advising'),
+  advisorAnnouncements: getTable(
+    'VITE_SUPABASE_ADVISOR_ANNOUNCEMENTS_TABLE',
+    getTable('VITE_SUPABASE_ANNOUNCEMENTS_TABLE', 'advisor_announcements'),
+  ),
   announcements: getTable('VITE_SUPABASE_ANNOUNCEMENTS_TABLE', ''),
   contactUs: getTable('VITE_SUPABASE_CONTACT_US_TABLE', ''),
   homeSections: getTable('VITE_SUPABASE_HOME_SECTIONS_TABLE', 'home_sections'),
@@ -66,6 +71,11 @@ const STORAGE_BUCKETS = {
   admissionFiles: getTable('VITE_SUPABASE_ADMISSION_FILES_BUCKET', 'admission-files'),
   homeImages: getTable('VITE_SUPABASE_HOME_IMAGES_BUCKET', 'home-images'),
   homeFiles: getTable('VITE_SUPABASE_HOME_FILES_BUCKET', 'home-files'),
+  /** Same bucket family as other CMS uploads unless overridden */
+  importantLinks: getTable(
+    'VITE_SUPABASE_IMPORTANT_LINKS_BUCKET',
+    getTable('VITE_SUPABASE_RESOURCES_FILES_BUCKET', 'resources-files'),
+  ),
 } as const;
 
 export type EventCardItem = {
@@ -255,6 +265,30 @@ export type AdvisorResourceItem = {
   thumbnailUrl?: string;
 };
 
+export type AcademicAdvisingItem = {
+  id: string;
+  title: string;
+  fileUrl: string;
+};
+
+export type AdvisorAnnouncementItem = {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  imageUrl?: string;
+  pdfUrl?: string;
+  galleryUrls: string[];
+};
+
+export type ImportantLinkItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  imageUrl?: string;
+};
+
 export type HonorListDocumentItem = {
   id: string;
   title: string;
@@ -333,6 +367,7 @@ const DEFAULT_HERO_NAV_TREE: HeroNavTreeItem[] = [
     ],
   },
   { title: 'Facilities', url: '/facilities', target: '_self', accessRole: 'public', children: [] },
+  { title: 'Important Links', url: '/important-links', target: '_self', accessRole: 'public', children: [] },
   { title: 'News', url: '/news', target: '_self', accessRole: 'public', children: [] },
   { title: 'Events', url: '/events', target: '_self', accessRole: 'public', children: [] },
   { title: 'Contact Us', url: '/contact-us', target: '_self', accessRole: 'public', children: [] },
@@ -762,6 +797,74 @@ export async function getStudentResourcesByCategory(category: string): Promise<S
   });
 }
 
+export async function getAcademicAdvisingList(): Promise<AcademicAdvisingItem[]> {
+  if (!TABLES.academicAdvising) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from(TABLES.academicAdvising)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return [];
+    }
+    throw new Error(error.message);
+  }
+
+  return (data || [])
+    .map((raw) => {
+      const row = unwrapRow(raw) as Record<string, unknown>;
+      const filePath = pickString(row.file_path, row.filePath, row.file_url, row.fileUrl, row.url);
+      return {
+        id: toId(row.id),
+        title: pickString(row.title) || 'Academic Advising Resource',
+        fileUrl: filePath ? getCmsMediaUrl(filePath) : '#',
+      };
+    })
+    .filter((item) => item.fileUrl !== '#');
+}
+
+export async function getImportantLinksList(): Promise<ImportantLinkItem[]> {
+  if (!TABLES.importantLinks) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from(TABLES.importantLinks)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return [];
+    }
+    throw new Error(error.message);
+  }
+
+  return (data || [])
+    .map((raw) => {
+      const row = unwrapRow(raw) as Record<string, unknown>;
+      const href = pickString(row.href, row.url, row.link) || '';
+      const imagePath = pickString(row.image_path, row.imagePath, row.image_url, row.imageUrl);
+      return {
+        id: toId(row.id),
+        title: pickString(row.title) || 'Link',
+        description: pickString(row.description, row.summary, row.details) || '',
+        href,
+        imageUrl: imagePath ? getCmsMediaUrl(imagePath) : undefined,
+      };
+    })
+    .filter((item) => {
+      const href = item.href;
+      return (
+        /^https?:\/\//i.test(href) || (/^\//.test(href) && href.length > 1 && !/^\/\//.test(href))
+      );
+    });
+}
+
 export async function getHonorListDocuments(): Promise<HonorListDocumentItem[]> {
   const { data, error } = await supabase
     .from(TABLES.honorListDocs)
@@ -804,7 +907,7 @@ export async function getAdvisorResources(): Promise<AdvisorResourceItem[]> {
     const filePath = pickString(row.file_path, row.filePath);
     const directUrl = pickString(row.resource_url, row.resourceUrl, row.url);
     const resourceTypeRaw = pickString(row.resource_type, row.resourceType) || 'file';
-    const resourceType =
+    const resourceType: AdvisorResourceItem['resourceType'] =
       resourceTypeRaw === 'video' || resourceTypeRaw === 'link' || resourceTypeRaw === 'file'
         ? resourceTypeRaw
         : 'file';
@@ -828,6 +931,81 @@ export async function getAdvisorResources(): Promise<AdvisorResourceItem[]> {
       thumbnailUrl: thumbnailRaw ? getCmsMediaUrl(thumbnailRaw) : undefined,
     };
   }).filter((item) => item.resourceUrl && item.resourceUrl !== '#');
+}
+
+export async function getAdvisorAnnouncementsList(): Promise<AdvisorAnnouncementItem[]> {
+  if (!TABLES.advisorAnnouncements) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from(TABLES.advisorAnnouncements)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return [];
+    }
+    throw new Error(error.message);
+  }
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const photoPath = pickString(
+      row.photo_path,
+      row.photoPath,
+      row.photo_url,
+      row.photoUrl,
+      row.image_path,
+      row.imagePath,
+      row.image_url,
+      row.imageUrl,
+      row.thumbnail_path,
+      row.thumbnailPath,
+      row.thumbnail_url,
+      row.thumbnailUrl,
+    );
+    const pdfPath = pickString(
+      row.pdf_path,
+      row.pdfPath,
+      row.pdf_url,
+      row.pdfUrl,
+      row.file_path,
+      row.filePath,
+      row.file_url,
+      row.fileUrl,
+      row.resource_url,
+      row.resourceUrl,
+      row.attachment_path,
+      row.attachmentPath,
+      row.attachment_url,
+      row.attachmentUrl,
+    );
+    const galleryUrls = extractMediaUrls(
+      row.gallery_urls,
+      row.galleryUrls,
+      row.gallery_paths,
+      row.galleryPaths,
+      row.gallery,
+      row.images,
+      row.image_urls,
+      row.imageUrls,
+      row.photos,
+      row.photo_urls,
+      row.photoUrls,
+    );
+
+    return {
+      id: toId(row.id),
+      title: pickString(row.title) || 'Announcement',
+      description: pickString(row.description, row.content, row.body, row.excerpt) || '',
+      date: pickString(row.announcement_date, row.date, row.published_at, row.publish_date, row.created_at) || '',
+      imageUrl: photoPath ? getCmsMediaUrl(photoPath) : galleryUrls[0],
+      pdfUrl: pdfPath ? getCmsMediaUrl(pdfPath) : undefined,
+      galleryUrls,
+    };
+  });
 }
 
 export async function getAnnouncements(): Promise<Announcements> {
@@ -1586,6 +1764,21 @@ export function getCmsMediaUrl(path: string): string {
     return path;
   }
 
+  // Dashboard sometimes saves "resources-files/<objectKey>" — first segment is the bucket id, not part of the Storage object path.
+  const bucketIdSegment = normalizedPath.split('/')[0]?.toLowerCase() ?? '';
+  if (
+    (bucketIdSegment === 'resources-files' || bucketIdSegment === 'resources_files') &&
+    normalizedPath.includes('/')
+  ) {
+    const objectKey = normalizedPath.split('/').slice(1).join('/');
+    if (objectKey) {
+      const { data } = supabase.storage.from(STORAGE_BUCKETS.resources).getPublicUrl(objectKey);
+      if (data?.publicUrl) {
+        return data.publicUrl;
+      }
+    }
+  }
+
   const [firstSegment] = normalizedPath.split('/');
   const lowerSegment = (firstSegment || '').toLowerCase();
 
@@ -1602,6 +1795,12 @@ export function getCmsMediaUrl(path: string): string {
     bucketName = STORAGE_BUCKETS.activities;
   } else if (lowerSegment === 'resources' || lowerSegment === 'resource') {
     bucketName = STORAGE_BUCKETS.resources;
+  } else if (
+    lowerSegment === 'important-links' ||
+    lowerSegment === 'important_links' ||
+    lowerSegment === 'importantlinks'
+  ) {
+    bucketName = STORAGE_BUCKETS.importantLinks;
   } else if (lowerSegment === 'honor-list' || lowerSegment === 'honor_list' || lowerSegment === 'honorlist') {
     bucketName = STORAGE_BUCKETS.honorList;
   } else if (lowerSegment === 'gallery' || lowerSegment === 'photo_gallery') {
