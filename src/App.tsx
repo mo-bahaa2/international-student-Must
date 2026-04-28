@@ -127,6 +127,7 @@ function AppContent() {
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/contactus" element={<ContactUs />} />
               <Route path="/contact-us" element={<ContactUs />} />
+              <Route path="/contact-center" element={<ContactUs />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
