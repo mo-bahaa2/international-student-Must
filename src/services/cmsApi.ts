@@ -34,6 +34,7 @@ const TABLES = {
   honorListDocs: getTable('VITE_SUPABASE_STUDENT_HONOR_LIST_TABLE', 'student_honor_list_documents'),
   // Intentionally no default to avoid 404s when this table is not provisioned yet.
   heroMenus: getTable('VITE_SUPABASE_HERO_MENU_TABLE', ''),
+  importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_TABLE', 'important_links'),
 } as const;
 
 const STORAGE_BUCKETS = {
@@ -49,6 +50,7 @@ const STORAGE_BUCKETS = {
   calendars: getTable('VITE_SUPABASE_CALENDAR_FILES_BUCKET', 'calendar-files'),
   gallery: getTable('VITE_SUPABASE_GALLERY_BUCKET', 'gallery'),
   avatars: getTable('VITE_SUPABASE_AVATARS_BUCKET', 'avatars'),
+  importantLinks: getTable('VITE_SUPABASE_IMPORTANT_LINKS_IMAGES_BUCKET', 'important-links-images'),
 } as const;
 
 export type EventCardItem = {
@@ -70,6 +72,14 @@ export type NewsCardItem = {
   href: string;
   imageUrl: string;
   imageUrls: string[];
+};
+
+export type ImportantLinkItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  imageUrl: string;
 };
 
 export type ActivityType = 'sport' | 'cultural' | 'art' | 'student club';
@@ -795,6 +805,41 @@ export async function getNewsList(): Promise<NewsCardItem[]> {
       href: pickString(row.href) || '#',
       imageUrl: fallbackUrls[0] || '',
       imageUrls: fallbackUrls,
+    };
+  });
+}
+
+export async function getImportantLinks(): Promise<ImportantLinkItem[]> {
+  const { data, error } = await supabase
+    .from(TABLES.importantLinks)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const imagePath = pickString(row.image_path, row.imageUrl, row.image_url);
+    let imageUrl = '';
+    if (imagePath) {
+      if (/^https?:\/\//i.test(imagePath)) {
+        imageUrl = imagePath;
+      } else {
+        const { data: urlData } = supabase.storage
+          .from(STORAGE_BUCKETS.importantLinks)
+          .getPublicUrl(imagePath.replace(/^\/+/, ''));
+        imageUrl = urlData?.publicUrl || '';
+      }
+    }
+
+    return {
+      id: toId(row.id),
+      title: pickString(row.title) || 'Untitled',
+      description: pickString(row.description) || '',
+      href: pickString(row.href) || '#',
+      imageUrl,
     };
   });
 }

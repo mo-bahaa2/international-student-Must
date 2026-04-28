@@ -39,8 +39,9 @@ import ActivitiesPage from './pages/Activities';
 import AdvisingPage from './pages/Advising';
 
 // Custom Collection Pages
-import News from './pages/News'; 
-import Events from './pages/Events'; 
+import News from './pages/News';
+import Events from './pages/Events';
+import ImportantLinks from './pages/ImportantLinks';
 
 import { ProfileProvider } from './contexts/ProfileContext';
 import { RequestsProvider } from './contexts/RequestsContext';
@@ -107,6 +108,7 @@ function AppContent() {
               <Route path="/student-clubs" element={<ActivitiesPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/important-links" element={<ImportantLinks />} />
               {/* ------------------------------------- */}
 
               <Route path="/questionnaires" element={<Questionnaires />} />

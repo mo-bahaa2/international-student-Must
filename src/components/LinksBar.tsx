@@ -49,6 +49,7 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
   { label: 'Facilities', to: '/facilities' },
   { label: 'News', to: '/news' },
   { label: 'Events', to: '/events' },
+  { label: 'Important Links', to: '/important-links' },
   { label: 'Contact Us', to: '/contact-us' },
 ];
 
