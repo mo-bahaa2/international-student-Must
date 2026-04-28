@@ -93,6 +93,9 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
       { label: 'International Handbook', to: '/international-handbook' },
     ],
   },
+  { label: 'News', to: '/news' },
+  { label: 'Events', to: '/events' },
+  { label: 'Important Links', to: '/important-links' },
   {
     label: 'Contact Center',
     to: '/contact-center',
@@ -101,29 +104,30 @@ export const STATIC_MENU_ITEMS: MenuItem[] = [
       { label: 'Feedback Channel', to: '/contact-center?group=feedback' },
     ],
   },
-  { label: 'News', to: '/news' },
-  { label: 'Events', to: '/events' },
-  { label: 'Important Links', to: '/important-links' },
 ];
 
 export function getMenuItemsForRole(userRole?: string | null): MenuItem[] {
   const isAdvisor = userRole === ROLES.ADMIN;
+  const contactCenterItem = STATIC_MENU_ITEMS.find((item) => item.label === 'Contact Center');
+  const baseWithoutContactCenter = STATIC_MENU_ITEMS.filter((item) => item.label !== 'Contact Center');
+  const baseWithoutStandaloneAdvising = baseWithoutContactCenter.filter((item) => item.label !== 'Advising');
+
   if (!isAdvisor) {
-    return STATIC_MENU_ITEMS;
+    return contactCenterItem
+      ? [...baseWithoutStandaloneAdvising, contactCenterItem]
+      : baseWithoutStandaloneAdvising;
   }
 
-  const menuItemsWithoutStandaloneAdvising = STATIC_MENU_ITEMS.filter((item) => item.label !== 'Advising');
-  const contactCenterIndex = menuItemsWithoutStandaloneAdvising.findIndex((item) => item.label === 'Contact Center');
+  const advisingIndex = baseWithoutStandaloneAdvising.findIndex((item) => item.label === 'Activities');
 
-  if (contactCenterIndex === -1) {
-    return [...menuItemsWithoutStandaloneAdvising, ADVISOR_MENU_ITEM];
+  if (advisingIndex === -1) {
+    return [...baseWithoutStandaloneAdvising, ADVISOR_MENU_ITEM];
   }
 
   return [
-    ...menuItemsWithoutStandaloneAdvising.slice(0, contactCenterIndex),
+    ...baseWithoutStandaloneAdvising.slice(0, advisingIndex),
     ADVISOR_MENU_ITEM,
-    menuItemsWithoutStandaloneAdvising[contactCenterIndex],
-    ...menuItemsWithoutStandaloneAdvising.slice(contactCenterIndex + 1),
+    ...baseWithoutStandaloneAdvising.slice(advisingIndex),
   ];
 }
 
