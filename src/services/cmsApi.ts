@@ -33,6 +33,7 @@ const TABLES = {
   calendars: getTable('VITE_SUPABASE_CALENDARS_TABLE', 'calendars'),
   heroSlides: getTable('VITE_SUPABASE_GALLERY_TABLE', 'photo_gallery'),
   honorListDocs: getTable('VITE_SUPABASE_STUDENT_HONOR_LIST_TABLE', 'student_honor_list_documents'),
+  facilities: getTable('VITE_SUPABASE_FACILITIES_TABLE', 'facilities'),
   // Intentionally no default to avoid 404s when this table is not provisioned yet.
   heroMenus: getTable('VITE_SUPABASE_HERO_MENU_TABLE', ''),
 } as const;
@@ -52,6 +53,8 @@ const STORAGE_BUCKETS = {
   avatars: getTable('VITE_SUPABASE_AVATARS_BUCKET', 'avatars'),
   homeImages: getTable('VITE_SUPABASE_HOME_IMAGES_BUCKET', 'home-images'),
   homeFiles: getTable('VITE_SUPABASE_HOME_FILES_BUCKET', 'home-files'),
+  facilitiesImages: getTable('VITE_SUPABASE_FACILITIES_IMAGES_BUCKET', 'facilities-images'),
+  internationalHandbookFiles: getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_BUCKET', 'international-handbook-files'),
 } as const;
 
 export type EventCardItem = {
@@ -91,6 +94,26 @@ export type HomeSectionContent = {
   contentText: string | null;
   imageUrl: string | null;
   fileUrl: string | null;
+  updatedAt: string | null;
+};
+
+export type FacilitiesSectionType = 'must-facilities' | 'international-students-handbook';
+
+export type FacilityItem = {
+  id: string;
+  sectionType: FacilitiesSectionType;
+  title: string;
+  contentHtml: string;
+  thumbnailUrl: string | null;
+  galleryUrls: string[];
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type InternationalHandbookItem = {
+  key: string;
+  title: string;
+  fileUrl: string;
   updatedAt: string | null;
 };
 
@@ -1035,6 +1058,120 @@ export async function getHomeSectionsContent(): Promise<Partial<Record<HomeSecti
   return mapped;
 }
 
+export async function getFacilitiesSections(sectionType: FacilitiesSectionType): Promise<FacilityItem[]> {
+  const { data, error } = await supabase
+    .from(TABLES.facilities)
+    .select('*')
+    .eq('section_type', sectionType)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return (data || []).map((raw) => {
+    const row = unwrapRow(raw) as Record<string, unknown>;
+    const thumbnailPath = pickString(row.thumbnail_path, row.thumbnailPath);
+    const galleryPaths = Array.isArray(row.gallery_paths) ? row.gallery_paths : Array.isArray(row.galleryPaths) ? row.galleryPaths : [];
+
+    return {
+      id: toId(row.id),
+      sectionType: (pickString(row.section_type, row.sectionType) as FacilitiesSectionType) || sectionType,
+      title: pickString(row.title) || 'Facility',
+      contentHtml: pickString(row.content_html, row.contentHtml) || '',
+      thumbnailUrl: thumbnailPath
+        ? supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(thumbnailPath).data.publicUrl
+        : null,
+      galleryUrls: galleryPaths
+        .filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
+        .map((path) => supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(path).data.publicUrl),
+      createdAt: pickString(row.created_at, row.createdAt) || null,
+      updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+    };
+  });
+}
+
+export async function getFacilityById(id: string): Promise<FacilityItem | null> {
+  const trimmedId = id.trim();
+  if (!trimmedId) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from(TABLES.facilities)
+    .select('*')
+    .eq('id', trimmedId)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return null;
+    }
+
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = unwrapRow(data) as Record<string, unknown>;
+  const thumbnailPath = pickString(row.thumbnail_path, row.thumbnailPath);
+  const galleryPaths = Array.isArray(row.gallery_paths) ? row.gallery_paths : Array.isArray(row.galleryPaths) ? row.galleryPaths : [];
+
+  return {
+    id: toId(row.id),
+    sectionType: (pickString(row.section_type, row.sectionType) as FacilitiesSectionType) || 'must-facilities',
+    title: pickString(row.title) || 'Facility',
+    contentHtml: pickString(row.content_html, row.contentHtml) || '',
+    thumbnailUrl: thumbnailPath
+      ? supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(thumbnailPath).data.publicUrl
+      : null,
+    galleryUrls: galleryPaths
+      .filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
+      .map((path) => supabase.storage.from(STORAGE_BUCKETS.facilitiesImages).getPublicUrl(path).data.publicUrl),
+    createdAt: pickString(row.created_at, row.createdAt) || null,
+    updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+  };
+}
+
+export async function getInternationalHandbookDocument(): Promise<InternationalHandbookItem | null> {
+  const { data, error } = await supabase
+    .from(getTable('VITE_SUPABASE_INTERNATIONAL_HANDBOOK_TABLE', 'international_handbook_documents'))
+    .select('*')
+    .eq('key', 'current')
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return null;
+    }
+
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const row = unwrapRow(data) as Record<string, unknown>;
+  const filePath = pickString(row.file_path, row.filePath);
+  if (!filePath) {
+    return null;
+  }
+
+  return {
+    key: pickString(row.key) || 'current',
+    title: pickString(row.title) || 'International Handbook',
+    fileUrl: supabase.storage.from(STORAGE_BUCKETS.internationalHandbookFiles).getPublicUrl(filePath).data.publicUrl,
+    updatedAt: pickString(row.updated_at, row.updatedAt) || null,
+  };
+}
+
 function normalizeMenuNode(raw: unknown): HeroNavTreeItem | null {
   if (!isObject(raw)) {
     return null;
@@ -1152,6 +1289,10 @@ export function getCmsMediaUrl(path: string): string {
     bucketName = STORAGE_BUCKETS.calendars;
   } else if (lowerSegment === 'avatars') {
     bucketName = STORAGE_BUCKETS.avatars;
+  } else if (lowerSegment === 'facilities' || lowerSegment === 'facility') {
+    bucketName = STORAGE_BUCKETS.facilitiesImages;
+  } else if (lowerSegment === 'international-handbook' || lowerSegment === 'international_handbook' || lowerSegment === 'handbook') {
+    bucketName = STORAGE_BUCKETS.internationalHandbookFiles;
   }
 
   if (bucketName) {
